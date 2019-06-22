@@ -4,6 +4,7 @@
 interface CreepMemory {
   role: string;
   room: string;
+  buildingSourceId: string | null;
   working: boolean;
 }
 
@@ -17,4 +18,16 @@ declare namespace NodeJS {
   interface Global {
     log: any;
   }
+}
+
+interface Position {
+  x: number;
+  y: number;
+}
+
+interface RoomMemory {
+  avoid: any;
+  areSourcesRoadsSetup: boolean | undefined;
+  areControllerRoadsSetup: boolean | undefined;
+  constructionsAreSetupAtLevel: number | undefined;
 }
