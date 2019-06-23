@@ -24,8 +24,9 @@ export class Architect {
 
     var creations = [
       this.createInitialSpawn,
-      this.createSourcesRoads,
-      this.createControllerRoads,
+      this.createRoads,
+      // this.createSourcesRoads,
+      // this.createControllerRoads,
       // this.createColonyRoads,
       // this.createCloseToSpawn(STRUCTURE_EXTENSION),
       // this.createContainers,
@@ -41,20 +42,20 @@ export class Architect {
       // this.createLinks
     ];
 
-    if (constructionSites.length === 0) {
-      let somethingIsBeingBuilt = false;
-      for (let i = 0; i < creations.length; i++) {
-        let result = creations[i].bind(this)();
-        if (result === OK) {
-          somethingIsBeingBuilt = true;
-          break;
-        }
-      }
-
-      if (!somethingIsBeingBuilt) {
-        this.room.memory.constructionsAreSetupAtLevel = this.room.controller && this.room.controller.level;
+    // if (constructionSites.length === 0) {
+    let somethingIsBeingBuilt = false;
+    for (let i = 0; i < creations.length; i++) {
+      let result = creations[i].bind(this)();
+      if (result === OK) {
+        somethingIsBeingBuilt = true;
+        break;
       }
     }
+
+    if (!somethingIsBeingBuilt) {
+      this.room.memory.constructionsAreSetupAtLevel = this.room.controller && this.room.controller.level;
+    }
+    // }
   }
 
   createInitialSpawn() {
@@ -70,6 +71,11 @@ export class Architect {
     } else {
       return -1;
     }
+  }
+
+  createRoads() {
+    this.createSourcesRoads()
+    this.createControllerRoads()
   }
 
   createSourcesRoads() {

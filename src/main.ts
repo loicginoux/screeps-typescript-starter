@@ -11,7 +11,7 @@ import { Architect } from "Architect";
 export const loop = ErrorMapper.wrapLoop(() => {
   // console.log(`Current game tick is ${Game.time}`);
   let spawn = Game.spawns['Spawn1'];
-  console.log(`spawn energy ${spawn.energy}/${spawn.energyCapacity}`);
+  // console.log(`spawn energy ${spawn.energy}/${spawn.energyCapacity}`);
 
   spawner.run();
   // taskAssigner.run();
@@ -34,6 +34,8 @@ export const loop = ErrorMapper.wrapLoop(() => {
 
   for (var name in Game.creeps) {
     var creep = Game.creeps[name];
+    // reassign task if needed
+    taskAssigner.run(creep)
     if (creep.memory.role == 'harvester') {
       roleHarvester.run(creep);
     }
