@@ -10,7 +10,7 @@ export class Utils {
     });
   }
 
-  static findClosestAvailablePositionTo(pos: Position): Position {
+  // static findClosestAvailablePositionTo(pos: Position): Position {
 
-  }
+  // }
 }
