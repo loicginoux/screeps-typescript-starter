@@ -1,3 +1,4 @@
+import { Utils } from "utils/utils";
 export class Architect {
   constructor(private room: Room) { }
 
@@ -24,22 +25,9 @@ export class Architect {
 
     var creations = [
       this.createInitialSpawn,
-      this.createRoads,
-      // this.createSourcesRoads,
-      // this.createControllerRoads,
-      // this.createColonyRoads,
-      // this.createCloseToSpawn(STRUCTURE_EXTENSION),
-      // this.createContainers,
-      // this.createMineralRoads,
-      // this.createExtractor,
-      // this.createCloseToSpawn(STRUCTURE_NUKER),
-      // this.createCloseToSpawn(STRUCTURE_TOWER),
-      // this.createCloseToSpawn(STRUCTURE_STORAGE),
-      // this.createCloseTo(this.room.storage, STRUCTURE_TERMINAL),
-      // this.createCloseToSpawn(STRUCTURE_SPAWN),
-      // this.createCloseToSpawn(STRUCTURE_OBSERVER),
-      // this.createCloseToSpawn(STRUCTURE_POWER_SPAWN),
-      // this.createLinks
+      this.createSourcesRoads,
+      this.createControllerRoads,
+      // this.createExtension,
     ];
 
     // if (constructionSites.length === 0) {
@@ -58,6 +46,7 @@ export class Architect {
     // }
   }
 
+
   createInitialSpawn() {
     const spawn = this.room.find(FIND_MY_SPAWNS)[0];
     const target = Game.flags["claimer_target"];
@@ -73,10 +62,17 @@ export class Architect {
     }
   }
 
-  createRoads() {
-    this.createSourcesRoads()
-    this.createControllerRoads()
-  }
+  // createExtension() {
+  //   nbExtensionInRoom =
+  //   if (!this.room.memory.extensionLevel > nbExtensionInRoom) {
+  //     const spawn = this.room.find(FIND_MY_SPAWNS)[0];
+  //     let pos = Utils.findClosestAvailablePositionTo(spawn.pos)
+  //     this.room.createConstructionSite(pos.x, pos.y, STRUCTURE_EXTENSION);
+  //     this.room.memory.areExtensionSetup = true;
+  //     return OK;
+  //   }
+  //   return -1;
+  // }
 
   createSourcesRoads() {
     if (!this.room.memory.areSourcesRoadsSetup) {
@@ -102,20 +98,14 @@ export class Architect {
 
   createControllerRoads() {
     // if (!this.room.memory.areControllerRoadsSetup && this.room.controller && this.room.controller.level >= 2) {
-    if (!this.room.memory.areControllerRoadsSetup && this.room.controller) {
-      var firstSpawn = this.room.find(FIND_MY_STRUCTURES, {
-        filter: i => i.structureType === "spawn"
-      })[0] as StructureSpawn | null;
+    var controller = this.room.controller;
+    if (!this.room.memory.areControllerRoadsSetup && controller) {
+      let closestControllerSource = controller.pos.findClosestByRange(FIND_SOURCES_ACTIVE)
 
-      if (!firstSpawn) {
-        return;
-      }
+      if (closestControllerSource) {
+        console.log('create controller roads')
+        this.createRoadFromAtoB(closestControllerSource.pos, controller.pos);
 
-      console.log('create controller roads')
-
-      var controller = this.room.controller;
-      if (controller) {
-        this.createRoadFromAtoB(firstSpawn.pos, controller.pos);
       }
 
       this.room.memory.areControllerRoadsSetup = true;

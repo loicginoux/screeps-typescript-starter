@@ -1,7 +1,7 @@
 import { ErrorMapper } from "utils/ErrorMapper";
-import { roleHarvester } from "role.harvester";
-import { roleUpgrader } from "role.upgrader";
-import { roleBuilder } from "role.builder";
+import { roleHarvester } from "roles/harvester";
+import { roleUpgrader } from "roles/upgrader";
+import { roleBuilder } from "roles/builder";
 import { spawner } from "spawner";
 import { taskAssigner } from "taskAssigner";
 import { Architect } from "Architect";

@@ -1,20 +1,38 @@
 export class spawner {
   public static run() {
-    let rolesPosition = ['harvester', 'harvester', 'builder', 'upgrader'];
+
     let spawn = Game.spawns['Spawn1'];
-    let creepsCounter = Object.keys(Game.creeps).length;
-    if (spawn.room.energyAvailable > 200 && creepsCounter < 10) {
-      let rand = Math.floor(Math.random() * 1000)
-      let whatToSpawn = rand % rolesPosition.length
-      let role = rolesPosition[whatToSpawn]
-      let creepName = `w${rand}`
-      console.log(`spawning ${role} ${creepName}`)
-      let ret = spawn.spawnCreep([WORK, CARRY, MOVE], creepName, {
-        memory: { role: role }
-      } as SpawnOptions);
-      if (ret != OK) {
-        console.log(`spawning ret error: ${ret}`)
+    let creeps = _.values(Game.creeps) as Creep[];
+
+    let harvesters = _.filter(creeps, creep => creep.memory.role == 'harvester');
+    let builders = _.filter(creeps, creep => creep.memory.role == 'builder');
+    let upgraders = _.filter(creeps, creep => creep.memory.role == 'upgrader');
+    let medics = _.filter(creeps, creep => creep.memory.role == 'medics');
+    let soldiers = _.filter(creeps, creep => creep.memory.role == 'soldier');
+
+
+    if (Game) {
+
+    }
+    if (spawn.room.energyAvailable > 200) {
+      let creepName = `w${Game.time}`
+      let role;
+
+
+      if (harvesters.length + builders.length < 5) {
+        role = 'harvester'
+      } else if (upgraders.length < 2) {
+        role = 'upgrader'
       }
+
+      if (role) {
+        console.log(`spawning ${role} ${creepName}`)
+        spawn.spawnCreep([WORK, CARRY, MOVE], creepName, {
+          memory: { role: role }
+        } as SpawnOptions);
+
+      }
+
     }
   }
 }

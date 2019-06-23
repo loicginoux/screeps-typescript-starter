@@ -1,19 +1,16 @@
-// export class Utils {
+export class Utils {
+  static findStructuresThatNeedsEnergy() {
+    let room = Game.rooms.sim;
+    return room.find(FIND_STRUCTURES, {
+      filter: (structure) => {
+        return (structure.structureType == STRUCTURE_EXTENSION ||
+          structure.structureType == STRUCTURE_SPAWN ||
+          structure.structureType == STRUCTURE_TOWER) && structure.energy < structure.energyCapacity;
+      }
+    });
+  }
 
-//   public static creepsNumber(role: string) {
+  static findClosestAvailablePositionTo(pos: Position): Position {
 
-
-//     var groupByRole = function (creeps) {
-//       return creeps.reduce(function (rv, x) {
-//         (rv.memory.role = rv.memory.role || []).push(x);
-//         return rv;
-//       }, {});
-//     };
-
-//     groupByRole(Game.creeps)
-//     Object.keys(Game.creeps).map(k => {
-//       return { name: k, count: counts[k] };
-//     });
-
-//   }
-// }
+  }
+}

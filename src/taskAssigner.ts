@@ -1,5 +1,6 @@
+import { Utils } from "utils/utils";
 export class taskAssigner {
-  public static run(creep: Creep) {
+  static run(creep: Creep) {
     let spawn = Game.spawns['Spawn1'];
 
     if (creep.memory.role == 'harvester') {
@@ -13,18 +14,20 @@ export class taskAssigner {
     }
 
   }
-  public static checkHarvester(creep: Creep) {
+  static checkHarvester(creep: Creep) {
     let spawn = Game.spawns['Spawn1'];
-    if (spawn.energy == spawn.energyCapacity) {
+    let structures = Utils.findStructuresThatNeedsEnergy()
+    if (structures.length == 0) {
       if (Memory.creeps[creep.name]) {
         console.log(`${creep.name} switched from ${creep.memory.role} to builder`)
         Memory.creeps[creep.name].role = 'builder';
       }
     }
   }
-  public static checkBuilder(creep: Creep) {
+  static checkBuilder(creep: Creep) {
     let spawn = Game.spawns['Spawn1'];
-    if (spawn.energy < spawn.energyCapacity) {
+    let structures = Utils.findStructuresThatNeedsEnergy()
+    if (structures.length > 0) {
       console.log(`${creep.name} switched from ${creep.memory.role} to harvester`)
       if (Memory.creeps[creep.name]) {
         Memory.creeps[creep.name].role = 'harvester';
@@ -32,7 +35,8 @@ export class taskAssigner {
     }
 
   }
-  public static checkUpgrader(creep: Creep) {
+  static checkUpgrader(creep: Creep) {
 
   }
+
 }
