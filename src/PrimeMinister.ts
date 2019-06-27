@@ -15,6 +15,6 @@ export class PrimeMinister extends TickRunner {
   }
 
   employees(): any[] {
-    return [this.spawner, this.architect, this.miningMinister];
+    return [this.miningMinister];
   }
 }

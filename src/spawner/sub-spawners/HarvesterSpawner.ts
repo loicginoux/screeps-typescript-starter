@@ -1,1 +1,5 @@
-export default class HarvesterSpawner { }
+export default class HarvesterSpawner {
+  spawn() {
+
+  }
+}

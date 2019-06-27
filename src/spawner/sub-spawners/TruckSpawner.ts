@@ -1,1 +1,5 @@
-export default class TruckSpawner { }
+export default class TruckSpawner {
+  spawn() {
+
+  }
+}

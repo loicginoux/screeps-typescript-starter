@@ -1,11 +1,25 @@
-export class PubSub {
-  private registry: Object = {}
+type notifEvent =
+  | "BUILD_CONTAINER_NEEDED"
+  | "BUILD_ROAD_NEEDED"
+  | "SPAWN_NEEDED"
+  ;
+
+interface InotifCallback {
+  (...args: any): Creep | void;
+}
+interface IPubSubRegistry {
+  [key: string]: (InotifCallback)[];
+}
+
+class PubSub {
+
+  private registry: IPubSubRegistry
 
   constructor() {
     this.registry = {}
   }
 
-  public subscribe(name: string, fn: any) {
+  public subscribe(name: notifEvent, fn: InotifCallback) {
     if (!this.registry[name]) {
       this.registry[name] = [fn];
     } else {
@@ -13,7 +27,7 @@ export class PubSub {
     }
   }
 
-  public publish(name: string, ...args: any) {
+  public publish(name: notifEvent, ...args: any) {
     if (!this.registry[name]) return;
 
     this.registry[name].forEach(x => {
@@ -21,3 +35,5 @@ export class PubSub {
     });
   }
 }
+
+export const pubSub = new PubSub();

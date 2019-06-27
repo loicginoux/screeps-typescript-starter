@@ -2,13 +2,13 @@
 	rooms: [
 		roomName: {
       avoid: false,
-      miningSites: [
-        {
+      miningSites: {
+        sourceId: {
           harvesters: [:id],
           truck: [:id],
           container: :id,
         }
-      ],
+      },
       extractorSites: [
         {
           harvesters: [:id],

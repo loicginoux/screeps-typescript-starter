@@ -8,9 +8,17 @@ interface CreepMemory {
   working: boolean;
 }
 
+interface miningSiteMemory {
+  harvesters: string[],
+  trucks: string[],
+  containers: string[],
+}
 interface Memory {
   uuid: number;
   log: any;
+  miningSites: {
+    [key: string]: miningSiteMemory
+  }
 }
 
 // `global` extension samples

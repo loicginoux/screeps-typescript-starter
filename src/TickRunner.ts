@@ -1,10 +1,14 @@
 export abstract class TickRunner {
+  protected preCheckRes: number = OK;
 
-  constructor() { }
+  constructor() {
+
+  }
 
   public run(): void {
-    this.loadData()
+    // pre check for all first
     this.preCheck()
+    // action for all
     this.act()
     this.finalize()
   }
@@ -13,21 +17,19 @@ export abstract class TickRunner {
     return []
   }
 
-  loadData(): void {
-    this.employees().forEach(employee => {
-      employee.loadData()
-    });
-  }
 
-  preCheck(): void {
+  preCheck(): number {
     this.employees().forEach(employee => {
       employee.preCheck()
     });
+    return this.preCheckRes;
   }
 
   act(): void {
     this.employees().forEach(employee => {
-      employee.act()
+      if (employee.preCheckRes == OK) {
+        employee.act()
+      }
     });
   }
 
