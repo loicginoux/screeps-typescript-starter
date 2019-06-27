@@ -26,7 +26,7 @@ export class Architect {
     var creations = [
       this.createInitialSpawn,
       this.createSourcesRoads,
-      this.createControllerRoads,
+      // this.createControllerRoads,
       // this.createExtension,
     ];
 
@@ -73,6 +73,7 @@ export class Architect {
   //   }
   //   return -1;
   // }
+
 
   createSourcesRoads() {
     if (!this.room.memory.areSourcesRoadsSetup) {

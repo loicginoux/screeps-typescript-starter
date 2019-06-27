@@ -1,6 +1,6 @@
 export class Utils {
   static findStructuresThatNeedsEnergy() {
-    let room = Game.rooms.sim;
+    let room = Game.rooms.E17N41;
     return room.find(FIND_STRUCTURES, {
       filter: (structure) => {
         return (structure.structureType == STRUCTURE_EXTENSION ||
