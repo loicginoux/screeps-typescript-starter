@@ -27,7 +27,4 @@ interface Position {
 
 interface RoomMemory {
   avoid: any;
-  areSourcesRoadsSetup: boolean | undefined;
-  areControllerRoadsSetup: boolean | undefined;
-  constructionsAreSetupAtLevel: number | undefined;
 }
