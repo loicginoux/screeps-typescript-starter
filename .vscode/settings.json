@@ -19,5 +19,8 @@
   },
   "[typescript]": {
     "editor.formatOnSave": true
-  }
+  },
+  "gitlens.currentLine.enabled": false,
+  "gitlens.codeLens.recentChange.enabled": false,
+  "editor.codeLens": false
 }

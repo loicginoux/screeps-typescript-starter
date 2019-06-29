@@ -2,6 +2,10 @@ import { TickRunner } from "TickRunner";
 import { pubSub } from "utils/PubSub";
 import { RoleStaticHarvester } from "roles/RoleStaticHarvester";
 import { RoleTruck } from "roles/RoleTruck";
+import { SpawningRequest } from "spawner/SpawningRequest";
+import { Utils } from "utils/Utils";
+
+
 export class MiningSite extends TickRunner {
 
   private harvesters: Creep[];
@@ -12,30 +16,46 @@ export class MiningSite extends TickRunner {
   private minContainer = 1;
 
 
-  constructor(private source: Source) {
+  constructor(public source: Source) {
     super()
     let miningSiteMemory = Memory.miningSites[this.source.id];
-    this.harvesters = miningSiteMemory.harvesters.map(i => Game.creeps[i]);
-    this.trucks = miningSiteMemory.trucks.map(i => Game.creeps[i]);
-    this.containers = miningSiteMemory.containers.map(i => Game.getObjectById(i)) as StructureContainer[];
+    if (miningSiteMemory) {
+      this.harvesters = _.map(miningSiteMemory.harvesters, i => Game.getObjectById(i)) as Creep[];
+      this.trucks = _.map(miningSiteMemory.trucks, i => Game.getObjectById(i)) as Creep[];
+      this.containers = _.map(miningSiteMemory.containers, i => Game.getObjectById(i)) as StructureContainer[];
+    } else {
+      this.harvesters = []
+      this.trucks = []
+      this.containers = []
+    }
+
   }
 
   preCheck(): number {
     if (this.harvestersNeeded() > 0) {
-      pubSub.publish('SPAWN_NEEDED', { type: 'harvester', miningSite: this })
-      this.preCheckRes = ERR_NOT_ENOUGH_RESOURCES
+      pubSub.publish('SPAWN_REQUEST', {
+        role: 'harvester',
+        miningSite: this,
+        priority: 1
+      } as SpawningRequest)
+      this.preCheckResult = ERR_NOT_ENOUGH_RESOURCES
     }
 
     if (this.trucksNeeded() > 0) {
-      pubSub.publish('SPAWN_NEEDED', { type: 'truck', miningSite: this })
-      this.preCheckRes = ERR_NOT_ENOUGH_RESOURCES
+      pubSub.publish('SPAWN_REQUEST', {
+        role: 'truck',
+        miningSite: this,
+        priority: 1
+      } as SpawningRequest)
+      // this.preCheckResult = ERR_NOT_ENOUGH_RESOURCES
     }
 
     if (this.containerNeeded() > 0) {
       pubSub.publish('BUILD_CONTAINER_NEEDED', { miningSite: this })
-      this.preCheckRes = ERR_NOT_ENOUGH_RESOURCES
+      // containers are not mandarory, return OK
+
     }
-    return this.preCheckRes;
+    return this.preCheckResult;
   }
 
   harvestersNeeded(): number {
@@ -51,13 +71,13 @@ export class MiningSite extends TickRunner {
   }
 
   act(): void {
-    this.harvesters.forEach(creep => {
+    _.forEach(this.harvesters, creep => {
       if (creep.isIdle) {
         RoleStaticHarvester.newTask(creep, this.source, this.containers);
       }
       creep.run()
     })
-    this.trucks.forEach(creep => {
+    _.forEach(this.trucks, creep => {
       if (creep.isIdle) {
         RoleTruck.newTask(creep, this.containers[0]);
       }

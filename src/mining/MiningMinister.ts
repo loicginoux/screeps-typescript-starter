@@ -5,7 +5,6 @@ export class MiningMinister extends TickRunner {
 
   constructor(private room: Room) {
     super()
-    this.room
     this.miningSites = [];
     var sources = this.room.find(FIND_SOURCES);
     for (var sourceIndex in sources) {

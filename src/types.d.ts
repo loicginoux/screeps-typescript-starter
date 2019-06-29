@@ -1,25 +1,44 @@
-// example declaration file - remove these and add your own custom typings
-
 // memory extension samples
+
+type PubSubEventTypes =
+  | BUILD_CONTAINER_NEEDED
+  | BUILD_ROAD_NEEDED
+  | SPAWN_REQUEST
+  ;
+
+
+type BUILD_CONTAINER_NEEDED = "BUILD_CONTAINER_NEEDED";
+type BUILD_ROAD_NEEDED = "BUILD_ROAD_NEEDED";
+type SPAWN_REQUEST = "SPAWN_REQUEST";
+
+
 interface CreepMemory {
-  role: string;
   room: string;
   buildingSourceId: string | null;
+  miningSourceId: string | null;
   working: boolean;
 }
 
-interface miningSiteMemory {
+interface MiningSiteMemory {
   harvesters: string[],
   trucks: string[],
-  containers: string[],
+  containers: string[]
+  buildingContainers: number
 }
+
 interface Memory {
   uuid: number;
   log: any;
+  debug: number; // show debug console logs
   miningSites: {
-    [key: string]: miningSiteMemory
+    [miningSourceId: string]: MiningSiteMemory
   }
 }
+
+interface RoomMemory {
+  avoid: any;
+}
+
 
 // `global` extension samples
 declare namespace NodeJS {
@@ -31,8 +50,4 @@ declare namespace NodeJS {
 interface Position {
   x: number;
   y: number;
-}
-
-interface RoomMemory {
-  avoid: any;
 }

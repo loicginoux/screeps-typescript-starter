@@ -1,14 +1,8 @@
-type notifEvent =
-  | "BUILD_CONTAINER_NEEDED"
-  | "BUILD_ROAD_NEEDED"
-  | "SPAWN_NEEDED"
-  ;
 
-interface InotifCallback {
-  (...args: any): Creep | void;
-}
+type InotifCallback = (...args: any[]) => number;
+
 interface IPubSubRegistry {
-  [key: string]: (InotifCallback)[];
+  [key: string]: InotifCallback[];
 }
 
 class PubSub {
@@ -19,7 +13,7 @@ class PubSub {
     this.registry = {}
   }
 
-  public subscribe(name: notifEvent, fn: InotifCallback) {
+  public subscribe(name: PubSubEventTypes, fn: InotifCallback) {
     if (!this.registry[name]) {
       this.registry[name] = [fn];
     } else {
@@ -27,10 +21,10 @@ class PubSub {
     }
   }
 
-  public publish(name: notifEvent, ...args: any) {
+  public publish(name: PubSubEventTypes, ...args: any[]) {
     if (!this.registry[name]) return;
 
-    this.registry[name].forEach(x => {
+    _.forEach(this.registry[name], x => {
       x.apply(null, args);
     });
   }

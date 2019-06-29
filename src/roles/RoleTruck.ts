@@ -1,5 +1,5 @@
-import { Tasks } from "creep-Tasks/Tasks";
-import { EnergyStructure } from 'creep-tasks/utilities/helpers';
+import { default as Tasks } from 'creep-tasks'
+// import { EnergyStructure } from 'creep-tasks/utilities/helpers';
 
 export class RoleTruck {
   public static newTask(creep: Creep, container: StructureContainer): void {
