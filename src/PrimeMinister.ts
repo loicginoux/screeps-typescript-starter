@@ -9,12 +9,8 @@ export class PrimeMinister extends TickRunner {
   // build memory data from creeps roles (including newly spawned)
   // build memory data from finished construction sites
   loadData(): void {
-    if (!Memory.miningSites) { Memory.miningSites = {} }
+    this.buildMemory()
 
-    this.buildMiningSiteContainerMemory();
-    _.forEach(Game.creeps, creep => {
-      this.rebuildMiningSitesMemoryFromCreeps(creep);
-    })
 
     this.roomCommanders = _.map(Game.rooms, room => {
       const roomCommander = new RoomCommander(room)
@@ -22,6 +18,41 @@ export class PrimeMinister extends TickRunner {
     });
     // do not forget
     super.loadData();
+  }
+
+  buildMemory(): void {
+    this.initMiningSitesMemory();
+    this.initRoomMemory();
+
+    _.forEach(Game.creeps, creep => {
+      this.rebuildMRoomMemoryFromCreeps(creep);
+      this.rebuildMiningSitesMemoryFromCreeps(creep);
+    })
+  }
+
+  initRoomMemory(): void {
+    if (!Memory.rooms) { Memory.rooms = {} }
+
+    _.forEach(Game.rooms, room => {
+      if (!Memory.rooms[room.name]) {
+        Memory.rooms[room.name] = {
+          upgraders: [],
+          minUpgraders: 2
+        }
+      }
+    })
+  }
+
+  initMiningSitesMemory(): void {
+    if (!Memory.miningSites) { Memory.miningSites = {} }
+    this.buildMiningSiteContainerMemory();
+  }
+
+  rebuildMRoomMemoryFromCreeps(creep: Creep) {
+    let creepRoom = creep.memory.room
+    if (creepRoom && creep.name.includes('upgrader') && !Memory.rooms[creepRoom].upgraders.includes(creep.id)) {
+      Memory.rooms[creepRoom].upgraders.push(creep.id)
+    }
   }
 
   rebuildMiningSitesMemoryFromCreeps(creep: Creep) {

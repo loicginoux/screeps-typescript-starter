@@ -2,12 +2,12 @@ import { default as Tasks } from 'creep-tasks'
 // import { EnergyStructure } from 'creep-tasks/utilities/helpers';
 
 export class RoleTruck {
-  public static newTask(creep: Creep, container: StructureContainer): void {
+  public static newTask(creep: Creep, containers: StructureContainer[]): void {
     if (creep.carry.energy < creep.carryCapacity) {
-      if (creep.pos.getRangeTo(container) > 2) {
-        creep.task = Tasks.goTo(container.pos)
+      if (creep.pos.getRangeTo(containers[0]) > 2) {
+        creep.task = Tasks.goTo(containers[0].pos)
       } else {
-        creep.task = Tasks.withdraw(container)
+        creep.task = Tasks.withdraw(containers[0])
       }
     } else {
       let targets = creep.room.find(FIND_STRUCTURES, {

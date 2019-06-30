@@ -23,6 +23,7 @@ export abstract class TickRunner {
 
   // load data from memory
   // instanciate employees
+  // if overwritten, method should call super.loadData() so employees run the method too
   loadData(): void {
     // Utils.log('loadData for', this.constructor.name)
     _.each(this.employees(), employee => {
@@ -32,8 +33,9 @@ export abstract class TickRunner {
   }
 
   // check for necessity before acting
+  // if overwritten, method should call super.preCheck() so employees run the method too
   preCheck(): number {
-    Utils.log('preCheck for', this.constructor.name)
+    // Utils.log('preCheck for', this.constructor.name)
     _.each(this.employees(), employee => {
       // Utils.log('employee', employee.constructor.name)
       employee.preCheck()
@@ -42,8 +44,9 @@ export abstract class TickRunner {
   }
 
   // do creep tasks
+  // if overwritten, method should call super.act() so employees run the method too
   act(): void {
-    Utils.log('act for', this.constructor.name)
+    // Utils.log('act for', this.constructor.name)
     _.each(this.employees(), employee => {
       if (employee.preCheckResult == OK) {
         employee.act()
@@ -52,6 +55,7 @@ export abstract class TickRunner {
   }
 
   // anything needed after task done
+  // if overwritten, method should call super.finalize() so employees run the method too
   finalize(): void {
     _.each(this.employees(), employee => {
       employee.finalize()

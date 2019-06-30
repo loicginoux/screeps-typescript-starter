@@ -24,6 +24,7 @@ interface MiningSiteMemory {
   trucks: string[],
   containers: string[]
   buildingContainers: number
+  avoid?: boolean
 }
 
 interface Memory {
@@ -36,7 +37,9 @@ interface Memory {
 }
 
 interface RoomMemory {
-  avoid: any;
+  upgraders: string[]
+  avoid?: any;
+  minUpgraders?: number
 }
 
 
