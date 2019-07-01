@@ -10,9 +10,8 @@ export class RoleHarvester {
         creep.task = Tasks.harvest(source)
       }
     } else {
-      Utils.log("findClosestEnergyStructure")
+      // Utils.log("findClosestEnergyStructure")
       const target = this.findClosestEnergyStructure(creep)
-      Utils.log("target", target)
       if (target) {
         if (creep.pos.getRangeTo(target) > 1) {
           creep.task = Tasks.goTo(target.pos)

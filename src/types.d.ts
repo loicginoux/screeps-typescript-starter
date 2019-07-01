@@ -11,7 +11,6 @@ type BUILD_CONTAINER_NEEDED = "BUILD_CONTAINER_NEEDED";
 type BUILD_ROAD_NEEDED = "BUILD_ROAD_NEEDED";
 type SPAWN_REQUEST = "SPAWN_REQUEST";
 
-
 interface CreepMemory {
   room: string;
   buildingSourceId: string | null;
@@ -22,8 +21,9 @@ interface CreepMemory {
 interface MiningSiteMemory {
   harvesters: string[],
   trucks: string[],
+  builders: string[],
   containers: string[]
-  buildingContainers: number
+  buildingContainers: string[]
   avoid?: boolean
 }
 

@@ -12,15 +12,20 @@ export class Architect {
     const positionForBuilding = this.findContainerPositionForSource(miningSite.source)
     let res = -1
     if (positionForBuilding) {
-      res = Game.rooms[this.room.name].createConstructionSite(positionForBuilding, STRUCTURE_CONTAINER);
+      res = Game.rooms[this.room.name].createConstructionSite(positionForBuilding.x, positionForBuilding.y, STRUCTURE_CONTAINER);
       if (res == OK) {
-        Memory.miningSites[miningSite.source.id].buildingContainers += 1
+        const look = miningSite.room.lookAt(positionForBuilding);
+        _.forEach(look, (lookObject) => {
+          if (lookObject.type == LOOK_CONSTRUCTION_SITES) {
+            Memory.miningSites[miningSite.source.id].buildingContainers.push(lookObject.constructionSite.id)
+          }
+        });
       }
     }
     return res
   }
 
-  findContainerPositionForSource(source: Source): RoomPosition | null {
+  findContainerPositionForSource(source: Source): Position | null {
     let closeRoad = source.pos.findInRange(FIND_STRUCTURES, 1, {
       filter: i => i.structureType === STRUCTURE_ROAD
     })[0];
@@ -31,7 +36,7 @@ export class Architect {
       const terrains = this.lookForAround(LOOK_TERRAIN, source.pos)
       const firstPlain = _.find(terrains, (t) => t.terrain == 'plain')
       if (firstPlain) {
-        return new RoomPosition(firstPlain.x, firstPlain.y, this.room.name)
+        return firstPlain
       }
     }
     return null

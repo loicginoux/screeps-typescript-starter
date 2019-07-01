@@ -48,11 +48,10 @@ export class RoomCommander extends TickRunner {
     if (this.upgradersNeeded() > 0) {
       pubSub.publish('SPAWN_REQUEST', {
         role: 'upgrader',
-        priority: 1,
+        priority: Game.gcl.level,
         room: this.room
       } as SpawningRequest)
     }
-
     super.preCheck()
     return OK;
   }

@@ -1,3 +1,4 @@
+import { Utils } from "./Utils";
 
 type InotifCallback = (...args: any[]) => number;
 
@@ -22,8 +23,8 @@ class PubSub {
   }
 
   public publish(name: PubSubEventTypes, ...args: any[]) {
+    Utils.log(name)
     if (!this.registry[name]) return;
-
     _.forEach(this.registry[name], x => {
       x.apply(null, args);
     });

@@ -6,8 +6,18 @@ Game.rooms.E17N41.find(FIND_MY_STRUCTURES, {
 });
 
 
+// find spawns in room
 Game.rooms.sim.find(FIND_MY_STRUCTURES, {
   filter: i => {
-    i.structureType === STRUCTURE_SPAWN
+    return i.structureType === STRUCTURE_SPAWN
   }
 })
+
+
+// find available terrains near point
+_.find(Game.rooms.E17N41.lookForAtArea(LOOK_TERRAIN, 4 - 1, 21 - 1, 4 + 1, 21 + 1, true), function (t) { return t.terrain == 'plain' })
+
+
+// closest construction site or source
+var constructionSite = _.sortBy(creep.room.find(FIND_CONSTRUCTION_SITES), s => creep.pos.getRangeTo(s))
+var sources = _.sortBy(creep.room.find(FIND_SOURCES_ACTIVE), s => creep.pos.getRangeTo(s))

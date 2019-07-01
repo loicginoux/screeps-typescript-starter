@@ -2,7 +2,7 @@ import { SubSpawner } from "spawner/SubSpawner";
 
 export default class BuilderSpawner extends SubSpawner {
   spawningOptions(): Object {
-    return { memory: { miningSite: this.spawningRequest.miningSite } }
+    return { memory: { miningSourceId: this.spawningRequest.miningSite!.source.id } }
   }
 
   bodyParts(): BodyPartConstant[] {

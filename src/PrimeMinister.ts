@@ -63,7 +63,8 @@ export class PrimeMinister extends TickRunner {
           harvesters: [],
           trucks: [],
           containers: [],
-          buildingContainers: 0
+          builders: [],
+          buildingContainers: []
         }
       }
       if (creep.name.includes('harvester') && !Memory.miningSites[creepMiningSourceId].harvesters.includes(creep.id)) {
@@ -71,6 +72,9 @@ export class PrimeMinister extends TickRunner {
       }
       if (creep.name.includes('truck') && !Memory.miningSites[creepMiningSourceId].trucks.includes(creep.id)) {
         Memory.miningSites[creepMiningSourceId].trucks.push(creep.id)
+      }
+      if (creep.name.includes('builder') && !Memory.miningSites[creepMiningSourceId].builders.includes(creep.id)) {
+        Memory.miningSites[creepMiningSourceId].builders.push(creep.id)
       }
     }
   }
@@ -85,9 +89,10 @@ export class PrimeMinister extends TickRunner {
             harvesters: [],
             trucks: [],
             containers: [],
-            buildingContainers: 0
+            builders: [],
+            buildingContainers: []
           }
-        } else if (Memory.miningSites[source.id].containers.length == 0 || Memory.miningSites[source.id].buildingContainers == 0) {
+        } else if (Memory.miningSites[source.id].containers.length == 0 || Memory.miningSites[source.id].buildingContainers.length == 0) {
           const closeContainer: StructureContainer = source.pos.findInRange(FIND_STRUCTURES, 1, {
             filter: i => i.structureType === "container"
           })[0] as any;
