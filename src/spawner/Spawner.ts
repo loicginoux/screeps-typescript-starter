@@ -1,5 +1,4 @@
 import * as subs from "./sub-spawners";
-import { pubSub } from "utils/PubSub";
 import { Utils } from "utils/Utils";
 import { SpawningRequest } from "spawner/SpawningRequest";
 import { TickRunner } from "TickRunner";
@@ -14,7 +13,7 @@ export class Spawner extends TickRunner {
     super()
     this.spawningRequests = []
     this.availableSpawner = []
-    pubSub.subscribe('SPAWN_REQUEST', this.storeSpawnRequest.bind(this))
+    global.pubSub.subscribe('SPAWN_REQUEST', this.storeSpawnRequest.bind(this))
   }
 
   preCheck() {

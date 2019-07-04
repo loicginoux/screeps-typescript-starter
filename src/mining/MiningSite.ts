@@ -1,5 +1,4 @@
 import { TickRunner } from "TickRunner";
-import { pubSub } from "utils/PubSub";
 import { RoleStaticHarvester } from "roles/RoleStaticHarvester";
 import { RoleHarvester } from "roles/RoleHarvester";
 import { RoleTruck } from "roles/RoleTruck";
@@ -43,7 +42,7 @@ export class MiningSite extends TickRunner {
       return -1
     }
     if (this.harvestersNeeded() > 0) {
-      pubSub.publish('SPAWN_REQUEST', {
+      global.pubSub.publish('SPAWN_REQUEST', {
         role: 'harvester',
         miningSite: this,
         priority: 2
@@ -51,7 +50,7 @@ export class MiningSite extends TickRunner {
     }
 
     if (this.trucksNeeded() > 0) {
-      pubSub.publish('SPAWN_REQUEST', {
+      global.pubSub.publish('SPAWN_REQUEST', {
         role: 'truck',
         miningSite: this,
         priority: 2
@@ -61,7 +60,7 @@ export class MiningSite extends TickRunner {
     }
 
     if (this.builderNeeded() > 0) {
-      pubSub.publish('SPAWN_REQUEST', {
+      global.pubSub.publish('SPAWN_REQUEST', {
         role: 'builder',
         miningSite: this,
         priority: 1
@@ -69,7 +68,7 @@ export class MiningSite extends TickRunner {
     }
 
     if (this.containerNeeded()) {
-      pubSub.publish('BUILD_CONTAINER_NEEDED', { miningSite: this })
+      global.pubSub.publish('BUILD_CONTAINER_NEEDED', { miningSite: this })
       // container are not mandarory, return OK
     }
 
@@ -162,10 +161,8 @@ export class MiningSite extends TickRunner {
   }
 
   loadContainerState(): void {
-    console.log("this.memory.container", this.memory.container)
     if (this.memory.container) {
       this.container = Game.getObjectById(this.memory.container);
-      console.log("container", this.container)
       if (!this.container) {
         delete (this.memory.container)
       }

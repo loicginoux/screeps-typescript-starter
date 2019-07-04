@@ -1,5 +1,4 @@
 import { TickRunner } from "TickRunner";
-import { pubSub } from "utils/PubSub";
 
 export class TowersManager extends TickRunner {
   memory: TowerManagerMemory;
@@ -72,7 +71,7 @@ export class TowersManager extends TickRunner {
   preCheck(): number {
     const missingTowers = this.optimalTowerNumber() - this.towers.length;
     if (missingTowers) {
-      pubSub.publish('TOWER_REQUEST', {
+      global.pubSub.publish('TOWER_REQUEST', {
         roomName: this.room.name,
         priority: 10,
       })

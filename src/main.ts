@@ -1,5 +1,6 @@
 import { ErrorMapper } from "utils/ErrorMapper";
 import { Empire } from "Empire";
+import { PubSub } from "utils/PubSub";
 import { Utils } from "utils/Utils";
 
 Memory.debug = 1
@@ -7,6 +8,9 @@ Memory.debug = 1
 // This utility uses source maps to get the line numbers and file names of the original, TS source code
 export const loop = ErrorMapper.wrapLoop(() => {
   Utils.log(`Current game tick is ${Game.time}`);
+  // general publish subscriber used for inter module communication
+  global.pubSub = new PubSub();
+
   global.empire = new Empire()
 
   global.empire.run()

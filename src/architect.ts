@@ -1,14 +1,14 @@
-import { pubSub } from "utils/PubSub";
 import { Utils } from "utils/Utils";
 
 export class Architect {
   constructor(private room: Room) {
-    // pubSub.subscribe('BUILD_CONTAINER_NEEDED', this.buildContainer.bind(this))
-    pubSub.subscribe('BUILD_ROAD_NEEDED', this.buildRoad.bind(this))
-    // pubSub.subscribe('TOWER_REQUEST', this.buildTower.bind(this))
+    global.pubSub.subscribe('BUILD_CONTAINER_NEEDED', this.buildContainer.bind(this))
+    global.pubSub.subscribe('BUILD_ROAD_NEEDED', this.buildRoad.bind(this))
+    global.pubSub.subscribe('TOWER_REQUEST', this.buildTower.bind(this))
   }
 
   buildContainer(...args: any[]): number {
+    console.log("buildContainer")
     const miningSite = args[0].miningSite
     let position = args[0].position
     if (!position) {

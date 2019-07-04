@@ -60,7 +60,8 @@ interface RoomMemory {
 declare namespace NodeJS {
   interface Global {
     log: any;
-    empire?: Empire
+    empire?: any,
+    pubSub?: any
   }
 }
 

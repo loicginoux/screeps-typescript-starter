@@ -4,7 +4,6 @@ import { MiningMinister } from "mining/MiningMinister";
 import { TowersManager } from "TowersManager";
 import { TickRunner } from "TickRunner";
 import { SpawningRequest } from "spawner/SpawningRequest";
-import { pubSub } from "utils/PubSub";
 import { RoleUpgrader } from "roles/RoleUpgrader";
 
 export class RoomCommander extends TickRunner {
@@ -37,7 +36,7 @@ export class RoomCommander extends TickRunner {
 
   preCheck(): number {
     if (this.upgradersNeeded() > 0) {
-      pubSub.publish('SPAWN_REQUEST', {
+      global.pubSub.publish('SPAWN_REQUEST', {
         role: 'upgrader',
         priority: Game.gcl.level,
         room: this.room

@@ -6,7 +6,7 @@ interface IPubSubRegistry {
   [key: string]: InotifCallback[];
 }
 
-class PubSub {
+export class PubSub {
 
   private registry: IPubSubRegistry
 
@@ -20,6 +20,8 @@ class PubSub {
     } else {
       this.registry[name].push(fn);
     }
+    console.log("subscribe to", name, this.registry[name].length)
+
   }
 
   public publish(name: PubSubEventTypes, ...args: any[]) {
@@ -30,5 +32,3 @@ class PubSub {
     });
   }
 }
-
-export const pubSub = new PubSub();
