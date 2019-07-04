@@ -2,7 +2,7 @@ import { TickRunner } from "TickRunner";
 import { RoleStaticHarvester } from "roles/RoleStaticHarvester";
 import { RoleHarvester } from "roles/RoleHarvester";
 import { RoleTruck } from "roles/RoleTruck";
-import { RoleBuilder } from "roles/RoleBuilder";
+import { RoleMiningSiteBuilder } from "roles/RoleMiningSiteBuilder";
 import { SpawningRequest } from "spawner/SpawningRequest";
 import { Utils } from "utils/Utils";
 
@@ -61,7 +61,7 @@ export class MiningSite extends TickRunner {
 
     if (this.builderNeeded() > 0) {
       global.pubSub.publish('SPAWN_REQUEST', {
-        role: 'builder',
+        role: 'miningSiteBuilder',
         miningSite: this,
         priority: 1
       } as SpawningRequest)
@@ -112,7 +112,7 @@ export class MiningSite extends TickRunner {
           RoleStaticHarvester.newTask(creep, this.source, this.container);
           // when container are not built yet, creep is building
         } else if (!this.container && this.buildingContainer) {
-          RoleBuilder.newTask(creep, this.source);
+          RoleMiningSiteBuilder.newTask(creep, this.source);
         } else {
           RoleHarvester.newTask(creep, this.source);
         }
@@ -136,7 +136,7 @@ export class MiningSite extends TickRunner {
       if (creep.isIdle) {
         // this.cleanBuildingContainersMemory()
         if (this.memory.buildingContainer && !this.container) {
-          RoleBuilder.newTask(creep, this.source);
+          RoleMiningSiteBuilder.newTask(creep, this.source);
         } else if (this.container) {
           RoleStaticHarvester.newTask(creep, this.source, this.container);
         }

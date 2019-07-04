@@ -2,9 +2,9 @@ import { MiningSite } from "mining/MiningSite";
 
 type SpawnType =
   | "harvester"
-  | "static-harvester"
   | "truck"
   | "upgrader"
+  | "miningSiteBuilder"
   | "builder";
 // | "reparator"
 // | "fighter"

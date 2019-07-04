@@ -18,9 +18,9 @@ export class TowersManager extends TickRunner {
 
   loadData() {
     this.loadTowers();
-    // this.updateStructuresToRepair();
-    // this.updateEnemiesToAttack();
-    // this.updateCreepsToHeal();
+    this.updateStructuresToRepair();
+    this.updateEnemiesToAttack();
+    this.updateCreepsToHeal();
   }
 
   loadTowers(): StructureTower[] {
@@ -52,6 +52,7 @@ export class TowersManager extends TickRunner {
     return this.towers;
   }
 
+  // cache structures to repair
   updateStructuresToRepair() {
     this.room.find(FIND_STRUCTURES, {
       filter: (structure) => {
@@ -60,10 +61,11 @@ export class TowersManager extends TickRunner {
     })[0]
   }
 
+  // cache enemies to attack
   updateEnemiesToAttack() {
-
   }
 
+  // cache creep to heal
   updateCreepsToHeal() {
 
   }

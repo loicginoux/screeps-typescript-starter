@@ -5,6 +5,7 @@ import { TowersManager } from "TowersManager";
 import { TickRunner } from "TickRunner";
 import { SpawningRequest } from "spawner/SpawningRequest";
 import { RoleUpgrader } from "roles/RoleUpgrader";
+import { RoleBuilder } from "roles/RoleBuilder";
 
 export class RoomCommander extends TickRunner {
   spawner: Spawner;
@@ -12,7 +13,9 @@ export class RoomCommander extends TickRunner {
   miningMinister: MiningMinister;
   towersManager: TowersManager;
   minUpgraders = 2;
-  upgraders: Creep[];
+  minBuilders = 2;
+  upgraders: Creep[] = [];
+  builders: Creep[] = [];
   memory: RoomMemory;
 
   constructor(private room: Room) {
@@ -25,8 +28,8 @@ export class RoomCommander extends TickRunner {
   }
 
   loadData() {
-    this.upgraders = []
-    this.loadUpgraders()
+    this.instanciateObjectsFromMemory<Creep>(this.upgraders, 'upgraders')
+    this.instanciateObjectsFromMemory<Creep>(this.builders, 'builders')
     super.loadData();
   }
 
@@ -42,6 +45,26 @@ export class RoomCommander extends TickRunner {
         room: this.room
       } as SpawningRequest)
     }
+
+    if (!this.memory.ctrlRoads) {
+      let controllerEnergeySources = _.sortBy(this.room.find(FIND_SOURCES_ACTIVE), s => this.room.controller!.pos.getRangeTo(s))
+      if (controllerEnergeySources.length > 0) {
+        global.pubSub.publish('BUILD_ROAD_NEEDED', {
+          from: this.room.controller!.pos,
+          to: controllerEnergeySources[0].pos
+        })
+      }
+      this.memory.ctrlRoads = true
+    }
+
+    if (this.roomBuildersNeeded()) {
+      global.pubSub.publish('SPAWN_REQUEST', {
+        role: 'builder',
+        priority: 1,
+        room: this.room
+      } as SpawningRequest)
+    }
+
     super.preCheck()
     return OK;
   }
@@ -53,11 +76,23 @@ export class RoomCommander extends TickRunner {
       }
       creep.run()
     })
+
+    _.forEach(this.builders, creep => {
+      if (creep.isIdle) {
+        RoleBuilder.newTask(creep);
+      }
+      creep.run()
+    })
+
     super.act()
   }
 
   upgradersNeeded(): number {
     return this.minUpgraders - this.upgraders.length;
+  }
+
+  roomBuildersNeeded(): boolean {
+    return !!this.memory.ctrlRoads && ((this.minBuilders - this.builders.length) > 0);
   }
 
   loadUpgraders(): void {
@@ -73,5 +108,16 @@ export class RoomCommander extends TickRunner {
       // dead creep are removed from memory
       Memory.rooms[this.room.name].upgraders = updatedUpgradersMemory
     }
+  }
+
+  instanciateObjectsFromMemory<T>(objects: T[], memoryKey: string): void {
+    this.memory[memoryKey] = _.reduce(this.memory[memoryKey] as string[], (out: string[], id: string) => {
+      const object = Game.getObjectById(id) as T
+      if (object) {
+        out.push(id);
+        objects.push(object)
+      }
+      return out;
+    }, []) as string[];
   }
 }

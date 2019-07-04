@@ -1,36 +1,39 @@
 import { default as Tasks } from 'creep-tasks'
-// import { EnergyStructure } from 'creep-tasks/utilities/helpers';
 
 export class RoleBuilder {
-  public static newTask(creep: Creep, source: Source): void {
+  public static newTask(creep: Creep): void {
     if (creep.carry.energy < creep.carryCapacity) {
-      if (creep.pos.getRangeTo(source) > 1) {
-        creep.task = Tasks.goTo(source.pos)
-      } else {
-        creep.task = Tasks.harvest(source)
-      }
-    } else {
-      // Utils.log("findClosestEnergyStructure")
-      const constructionSiteId = Memory.miningSites[source.id].buildingContainer
-      if (constructionSiteId) {
-        const constructionSite = Game.getObjectById(constructionSiteId) as ConstructionSite
-        if (constructionSite) {
-          if (creep.pos.getRangeTo(constructionSite) > 1) {
-            creep.task = Tasks.goTo(constructionSite)
-          } else {
-            creep.task = Tasks.build(constructionSite)
-          }
+      let containers = creep.room.find(FIND_STRUCTURES, {
+        filter: (i) => i.structureType == STRUCTURE_CONTAINER && i.store[RESOURCE_ENERGY] > 0
+      }) as StructureContainer[];
+      containers = _.sortBy(containers, s => creep.pos.getRangeTo(s))
+      // get from containers first
+      if (!!containers) {
+        if (creep.pos.getRangeTo(containers[0]) > 1) {
+          creep.task = Tasks.goTo(containers[0])
+        } else {
+          creep.task = Tasks.withdraw(containers[0])
         }
       } else {
-        // all mining site buildings done
-        // const controller = creep.room.controller
-        // if (controller) {
-        //   if (creep.pos.getRangeTo(controller) > 1) {
-        //     creep.task = Tasks.goTo(controller.pos)
-        //   } else {
-        //     creep.task = Tasks.upgrade(controller)
-        //   }
-        // }
+        // else get from source directly
+        let sources = creep.room.find(FIND_SOURCES_ACTIVE) as Source[]
+        sources = _.sortBy(sources, s => creep.pos.getRangeTo(s))
+        if (!!sources) {
+          if (creep.pos.getRangeTo(sources[0]) > 1) {
+            creep.task = Tasks.goTo(sources[0])
+          } else {
+            creep.task = Tasks.harvest(sources[0])
+          }
+        }
+      }
+    } else {
+      let target = creep.room.find(FIND_CONSTRUCTION_SITES) as ConstructionSite[]
+      if (!!target) {
+        if (creep.pos.getRangeTo(target[0]) > 1) {
+          creep.task = Tasks.goTo(target[0])
+        } else {
+          creep.task = Tasks.build(target[0])
+        }
       }
     }
   }

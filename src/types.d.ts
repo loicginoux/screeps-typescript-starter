@@ -49,10 +49,13 @@ interface Memory {
 }
 
 interface RoomMemory {
-  upgraders: string[]
-  avoid?: any;
+  upgraders: string[];
+  builders?: string[];
+  avoid?: boolean;
   minUpgraders?: number
   towersManager: TowerManagerMemory
+  ctrlRoads?: boolean,
+  [object: string]: string[] | string | boolean | number | undefined | TowerManagerMemory
 }
 
 

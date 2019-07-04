@@ -26,7 +26,7 @@ export class Empire extends TickRunner {
     this.initRoomMemory();
 
     _.forEach(Game.creeps, creep => {
-      this.rebuildMRoomMemoryFromCreeps(creep);
+      this.rebuildRoomMemoryFromCreeps(creep);
       this.rebuildMiningSitesMemoryFromCreeps(creep);
     })
   }
@@ -39,6 +39,7 @@ export class Empire extends TickRunner {
         Memory.rooms[room.name] = {
           upgraders: [],
           minUpgraders: 2,
+          minBuilders: 2,
           towersManager: {}
         }
       }
@@ -50,10 +51,18 @@ export class Empire extends TickRunner {
     this.buildMiningSiteContainerMemory();
   }
 
-  rebuildMRoomMemoryFromCreeps(creep: Creep) {
+  rebuildRoomMemoryFromCreeps(creep: Creep) {
     let creepRoom = creep.memory.room
+    if (!creepRoom) { return }
+
+    if (!Memory.rooms[creepRoom].upgraders) { Memory.rooms[creepRoom].upgraders = [] }
     if (creepRoom && creep.name.includes('upgrader') && !Memory.rooms[creepRoom].upgraders.includes(creep.id)) {
       Memory.rooms[creepRoom].upgraders.push(creep.id)
+    }
+
+    if (!Memory.rooms[creepRoom].builders) { Memory.rooms[creepRoom].builders = [] }
+    if (creepRoom && creep.name.includes('builder') && !Memory.rooms[creepRoom].builders!.includes(creep.id)) {
+      Memory.rooms[creepRoom].builders!.push(creep.id)
     }
   }
 
@@ -73,7 +82,7 @@ export class Empire extends TickRunner {
       if (creep.name.includes('truck') && !Memory.miningSites[creepMiningSourceId].trucks.includes(creep.id)) {
         Memory.miningSites[creepMiningSourceId].trucks.push(creep.id)
       }
-      if (creep.name.includes('builder') && !Memory.miningSites[creepMiningSourceId].builders.includes(creep.id)) {
+      if (creep.name.includes('miningSiteBuilder') && !Memory.miningSites[creepMiningSourceId].builders.includes(creep.id)) {
         Memory.miningSites[creepMiningSourceId].builders.push(creep.id)
       }
     }
