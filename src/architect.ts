@@ -1,25 +1,25 @@
 import { pubSub } from "utils/PubSub";
-import { MiningSite } from "mining/MiningSite";
+import { Utils } from "utils/Utils";
 
 export class Architect {
   constructor(private room: Room) {
-    pubSub.subscribe('BUILD_CONTAINER_NEEDED', this.buildContainer.bind(this))
+    // pubSub.subscribe('BUILD_CONTAINER_NEEDED', this.buildContainer.bind(this))
     pubSub.subscribe('BUILD_ROAD_NEEDED', this.buildRoad.bind(this))
+    // pubSub.subscribe('TOWER_REQUEST', this.buildTower.bind(this))
   }
 
   buildContainer(...args: any[]): number {
     const miningSite = args[0].miningSite
-    const positionForBuilding = this.findContainerPositionForSource(miningSite.source)
+    let position = args[0].position
+    if (!position) {
+      position = this.findContainerPositionForSource(miningSite.source)
+    }
     let res = -1
-    if (positionForBuilding) {
-      res = Game.rooms[this.room.name].createConstructionSite(positionForBuilding.x, positionForBuilding.y, STRUCTURE_CONTAINER);
+    if (position) {
+      res = Game.rooms[this.room.name].createConstructionSite(position.x, position.y, STRUCTURE_CONTAINER);
+      Utils.log(`createConstructionSite container ${res}`)
       if (res == OK) {
-        const look = miningSite.room.lookAt(positionForBuilding);
-        _.forEach(look, (lookObject) => {
-          if (lookObject.type == LOOK_CONSTRUCTION_SITES) {
-            Memory.miningSites[miningSite.source.id].buildingContainers.push(lookObject.constructionSite.id)
-          }
-        });
+        miningSite.memory.nextContainerPos = position
       }
     }
     return res
@@ -46,8 +46,39 @@ export class Architect {
     return this.room.lookForAtArea(type, pos.y - 1, pos.x - 1, pos.y + 1, pos.x + 1, true)
   }
 
-  buildRoad(): number {
+  buildRoad(...args: any[]): number {
+    const from = args[0].from as RoomPosition
+    const to = args[0].to as RoomPosition
+
+    if (from.roomName != to.roomName && from.roomName == this.room.name) { return -1 }
+    const pathSteps = this.room.findPath(from, to, {
+      ignoreCreeps: true,
+      maxRooms: 1
+    })
+    _.forEach(pathSteps, (step) => {
+      this.room.createConstructionSite(step.x, step.y, STRUCTURE_ROAD)
+    })
     return OK
   }
 
+  buildTower(...args: any[]): number {
+    const room = Game.rooms[args[0].roomName]
+    let position = args[0].position
+    if (!position) {
+      position = this.findPositionForTower(room)
+    }
+    let res = -1
+    if (position) {
+      res = room.createConstructionSite(position.x, position.y, STRUCTURE_TOWER);
+      Utils.log(`createConstructionSite tower ${res}`)
+      if (res == OK) {
+        Memory.rooms[room.name].towersManager.nextTowerPos = position
+      }
+    }
+    return res
+  }
+
+  findPositionForTower(room: Room): Position {
+    return { x: 1, y: 1 } as Position
+  }
 }

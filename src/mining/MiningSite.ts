@@ -10,15 +10,15 @@ import { Utils } from "utils/Utils";
 
 export class MiningSite extends TickRunner {
 
-  private harvesters: Creep[];
-  private trucks: Creep[];
-  private builders: Creep[];
-  private containers: StructureContainer[];
-  private minHarvesters = 1;
-  private minTrucks = 1;
-  private minContainer = 1;
-  private minBuilders = 1;
-  private memory: MiningSiteMemory;
+  harvesters: Creep[] = [];
+  trucks: Creep[] = [];
+  builders: Creep[] = [];
+  container?: StructureContainer | null;
+  buildingContainer?: ConstructionSite | null;
+  minHarvesters = 1;
+  minTrucks = 1;
+  minBuilders = 1;
+  memory: MiningSiteMemory;
 
 
   constructor(public source: Source) {
@@ -28,46 +28,13 @@ export class MiningSite extends TickRunner {
 
 
   loadData() {
-    this.harvesters = []
-    let updatedHarvesterMemory: string[] = []
-    this.trucks = []
-    let updatedTrucksMemory: string[] = []
-    this.builders = []
-    let updatedBuildersMemory: string[] = []
-    this.containers = []
-
     if (this.memory) {
-      _.forEach(this.memory.harvesters, i => {
-        const creep = Game.getObjectById(i) as Creep
-        if (creep) {
-          this.harvesters.push(creep)
-          updatedHarvesterMemory.push(creep.id)
-        }
-      });
-      // dead creep are removed from memory
-      Memory.miningSites[this.source.id].harvesters = updatedHarvesterMemory
 
-      _.forEach(this.memory.trucks, i => {
-        const creep = Game.getObjectById(i) as Creep
-        if (creep) {
-          this.trucks.push(creep)
-          updatedTrucksMemory.push(creep.id)
-        }
-      });
-      // dead creep are removed from memory
-      Memory.miningSites[this.source.id].trucks = updatedTrucksMemory
-
-      _.forEach(this.memory.builders, i => {
-        const creep = Game.getObjectById(i) as Creep
-        if (creep) {
-          this.builders.push(creep)
-          updatedBuildersMemory.push(creep.id)
-        }
-      });
-      // dead creep are removed from memory
-      Memory.miningSites[this.source.id].builders = updatedBuildersMemory
-
-      this.containers = _.map(this.memory.containers, i => Game.getObjectById(i)) as StructureContainer[];
+      this.instanciateObjectsFromMemory<Creep>(this.harvesters, 'harvesters')
+      this.instanciateObjectsFromMemory<Creep>(this.trucks, 'trucks')
+      this.instanciateObjectsFromMemory<Creep>(this.builders, 'builders')
+      // this.instanciateObjectsFromMemory<StructureContainer>(this.container, 'container')
+      this.loadContainerState()
     }
   }
 
@@ -81,7 +48,6 @@ export class MiningSite extends TickRunner {
         miningSite: this,
         priority: 2
       } as SpawningRequest)
-      this.preCheckResult = ERR_NOT_ENOUGH_RESOURCES
     }
 
     if (this.trucksNeeded() > 0) {
@@ -102,11 +68,15 @@ export class MiningSite extends TickRunner {
       } as SpawningRequest)
     }
 
-    if (this.containerNeeded() > 0) {
+    if (this.containerNeeded()) {
       pubSub.publish('BUILD_CONTAINER_NEEDED', { miningSite: this })
-      // containers are not mandarory, return OK
+      // container are not mandarory, return OK
     }
 
+    // if (this.roadsNeeded()) {
+    //   pubSub.publish('BUILD_ROAD_NEEDED', { from: this.source.pos, to: this.source.room.controller!.pos })
+    //   Memory.miningSites[this.source.id].roads = true
+    // }
     return this.preCheckResult;
   }
 
@@ -121,8 +91,12 @@ export class MiningSite extends TickRunner {
     return 0
   }
 
-  containerNeeded(): number {
-    return this.minContainer - this.containers.length - this.memory.buildingContainers.length;
+  // roadsNeeded(): boolean {
+  //   return !!this.source.room.controller && this.source.room.controller.level > 1 && !this.memory.roads
+  // }
+
+  containerNeeded(): boolean {
+    return !this.container && !this.memory.buildingContainer;
   }
 
   avoid() {
@@ -134,8 +108,12 @@ export class MiningSite extends TickRunner {
   act(): void {
     _.forEach(this.harvesters, creep => {
       if (creep.isIdle) {
-        if (this.containers.length > 0) {
-          RoleStaticHarvester.newTask(creep, this.source, this.containers);
+        // when container are done, creep is static
+        if (this.container) {
+          RoleStaticHarvester.newTask(creep, this.source, this.container);
+          // when container are not built yet, creep is building
+        } else if (!this.container && this.buildingContainer) {
+          RoleBuilder.newTask(creep, this.source);
         } else {
           RoleHarvester.newTask(creep, this.source);
         }
@@ -145,8 +123,8 @@ export class MiningSite extends TickRunner {
 
     _.forEach(this.trucks, creep => {
       if (creep.isIdle) {
-        if (this.containers.length > 0) {
-          RoleTruck.newTask(creep, this.containers);
+        if (this.container) {
+          RoleTruck.newTask(creep, this.container);
         } else {
           RoleHarvester.newTask(creep, this.source);
         }
@@ -157,12 +135,55 @@ export class MiningSite extends TickRunner {
 
     _.forEach(this.builders, creep => {
       if (creep.isIdle) {
-        if (this.memory.buildingContainers.length > 0) {
+        // this.cleanBuildingContainersMemory()
+        if (this.memory.buildingContainer && !this.container) {
           RoleBuilder.newTask(creep, this.source);
+        } else if (this.container) {
+          RoleStaticHarvester.newTask(creep, this.source, this.container);
         }
       }
       creep.run()
     })
+  }
 
+  // this.instanciateObjectsFromMemory<Creep>(this.harvesters, 'harvesters')
+  // loop through memory object via memoryKey
+  // remove from memory when object undefined
+  // add objects to instanceObject
+  instanciateObjectsFromMemory<T>(objects: T[], memoryKey: string): void {
+    this.memory[memoryKey] = _.reduce(this.memory[memoryKey] as string[], (out: string[], id: string) => {
+      const object = Game.getObjectById(id) as T
+      if (object) {
+        out.push(id);
+        objects.push(object)
+      }
+      return out;
+    }, []) as string[];
+  }
+
+  loadContainerState(): void {
+    console.log("this.memory.container", this.memory.container)
+    if (this.memory.container) {
+      this.container = Game.getObjectById(this.memory.container);
+      console.log("container", this.container)
+      if (!this.container) {
+        delete (this.memory.container)
+      }
+    }
+    if (this.memory.buildingContainer) {
+      this.buildingContainer = Game.getObjectById(this.memory.buildingContainer);
+      if (!this.buildingContainer) {
+        delete (this.memory.buildingContainer)
+      }
+    }
+    if (this.memory.nextContainerPos) {
+      const look = this.source.room.lookAt(this.memory.nextContainerPos.x, this.memory.nextContainerPos.y);
+      _.forEach(look, (lookObject) => {
+        if (lookObject.type == LOOK_CONSTRUCTION_SITES) {
+          this.memory.buildingContainer = lookObject.constructionSite!.id
+          delete (this.memory.nextContainerPos)
+        }
+      });
+    }
   }
 }

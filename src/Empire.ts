@@ -3,7 +3,8 @@ import { Architect } from "Architect";
 import { MiningMinister } from "mining/MiningMinister";
 import { TickRunner } from "TickRunner";
 import { RoomCommander } from "RoomCommander";
-export class PrimeMinister extends TickRunner {
+
+export class Empire extends TickRunner {
   roomCommanders!: RoomCommander[];
 
   // build memory data from creeps roles (including newly spawned)
@@ -37,7 +38,8 @@ export class PrimeMinister extends TickRunner {
       if (!Memory.rooms[room.name]) {
         Memory.rooms[room.name] = {
           upgraders: [],
-          minUpgraders: 2
+          minUpgraders: 2,
+          towersManager: {}
         }
       }
     })
@@ -62,9 +64,7 @@ export class PrimeMinister extends TickRunner {
         Memory.miningSites[creepMiningSourceId] = {
           harvesters: [],
           trucks: [],
-          containers: [],
-          builders: [],
-          buildingContainers: []
+          builders: []
         }
       }
       if (creep.name.includes('harvester') && !Memory.miningSites[creepMiningSourceId].harvesters.includes(creep.id)) {
@@ -88,23 +88,14 @@ export class PrimeMinister extends TickRunner {
           Memory.miningSites[source.id] = {
             harvesters: [],
             trucks: [],
-            containers: [],
-            builders: [],
-            buildingContainers: []
-          }
-        } else if (Memory.miningSites[source.id].containers.length == 0 || Memory.miningSites[source.id].buildingContainers.length == 0) {
-          const closeContainer: StructureContainer = source.pos.findInRange(FIND_STRUCTURES, 1, {
-            filter: i => i.structureType === "container"
-          })[0] as any;
-          if (closeContainer) {
-            Memory.miningSites[source.id].containers.push(closeContainer.id)
+            builders: []
           }
         }
       }
     })
   }
 
-  employees(): any[] {
+  employees(): TickRunner[] {
     return this.roomCommanders;
   }
 }

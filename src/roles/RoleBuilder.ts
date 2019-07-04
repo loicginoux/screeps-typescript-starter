@@ -11,7 +11,7 @@ export class RoleBuilder {
       }
     } else {
       // Utils.log("findClosestEnergyStructure")
-      const constructionSiteId = Memory.miningSites[source.id].buildingContainers[0]
+      const constructionSiteId = Memory.miningSites[source.id].buildingContainer
       if (constructionSiteId) {
         const constructionSite = Game.getObjectById(constructionSiteId) as ConstructionSite
         if (constructionSite) {

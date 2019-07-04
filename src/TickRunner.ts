@@ -17,7 +17,7 @@ export abstract class TickRunner {
     this.finalize()
   }
 
-  employees(): any[] {
+  employees(): TickRunner[] {
     return []
   }
 

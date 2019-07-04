@@ -10,7 +10,6 @@ export class RoleHarvester {
         creep.task = Tasks.harvest(source)
       }
     } else {
-      // Utils.log("findClosestEnergyStructure")
       const target = this.findClosestEnergyStructure(creep)
       if (target) {
         if (creep.pos.getRangeTo(target) > 1) {
@@ -20,14 +19,14 @@ export class RoleHarvester {
         }
       } else {
         // all energy structures full, find a controller
-        const controller = creep.room.controller
-        if (controller) {
-          if (creep.pos.getRangeTo(controller) > 1) {
-            creep.task = Tasks.goTo(controller.pos)
-          } else {
-            creep.task = Tasks.upgrade(controller)
-          }
-        }
+        // const controller = creep.room.controller
+        // if (controller) {
+        //   if (creep.pos.getRangeTo(controller) > 1) {
+        //     creep.task = Tasks.goTo(controller.pos)
+        //   } else {
+        //     creep.task = Tasks.upgrade(controller)
+        //   }
+        // }
       }
     }
   }
