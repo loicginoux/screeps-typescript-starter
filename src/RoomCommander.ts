@@ -6,12 +6,14 @@ import { TickRunner } from "TickRunner";
 import { SpawningRequest } from "spawner/SpawningRequest";
 import { RoleUpgrader } from "roles/RoleUpgrader";
 import { RoleBuilder } from "roles/RoleBuilder";
+import { RoomPlanner } from "room_planning/RoomPlanner";
 
 export class RoomCommander extends TickRunner {
   spawner: Spawner;
   architect: Architect;
   miningMinister: MiningMinister;
   towersManager: TowersManager;
+  roomPlanner: RoomPlanner;
   minUpgraders = 2;
   minBuilders = 2;
   upgraders: Creep[] = [];
@@ -24,6 +26,7 @@ export class RoomCommander extends TickRunner {
     this.architect = new Architect(this.room)
     this.miningMinister = new MiningMinister(this.room)
     this.towersManager = new TowersManager(this.room)
+    this.roomPlanner = new RoomPlanner(this.room)
   }
 
   employees(): any[] {
