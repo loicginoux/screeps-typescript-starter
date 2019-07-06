@@ -21,9 +21,6 @@ interface CreepMemory {
 }
 
 interface MiningSiteMemory {
-  harvesters: string[],
-  trucks: string[],
-  builders: string[],
   container?: string,
   nextContainerPos?: Position,
   buildingContainer?: string,
@@ -49,8 +46,6 @@ interface Memory {
 }
 
 interface RoomMemory {
-  upgraders: string[];
-  builders?: string[];
   avoid?: boolean;
   minUpgraders?: number
   towersManager: TowerManagerMemory
@@ -64,7 +59,8 @@ declare namespace NodeJS {
   interface Global {
     log: any;
     empire?: any,
-    pubSub?: any
+    pubSub?: any,
+    mainRoom?: any
   }
 }
 

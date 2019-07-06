@@ -1,5 +1,4 @@
 - tower defense to intrusion
-- tower repair constructions in peace time
 - creeps die on containers
 - architect should create extension site
 - builder should build extensions

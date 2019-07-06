@@ -6,7 +6,16 @@ export class TowersManager extends TickRunner {
 
   constructor(private room: Room) {
     super()
+
+  }
+
+  loadData() {
     this.initMemory()
+    this.loadTowers();
+    this.updateStructuresToRepair();
+    this.updateEnemiesToAttack();
+    this.updateCreepsToHeal();
+    super.loadData();
   }
 
   initMemory() {
@@ -14,13 +23,6 @@ export class TowersManager extends TickRunner {
       Memory.rooms[this.room.name].towersManager = {}
     }
     this.memory = Memory.rooms[this.room.name].towersManager;
-  }
-
-  loadData() {
-    this.loadTowers();
-    this.updateStructuresToRepair();
-    this.updateEnemiesToAttack();
-    this.updateCreepsToHeal();
   }
 
   loadTowers(): StructureTower[] {
@@ -40,14 +42,12 @@ export class TowersManager extends TickRunner {
     }
 
     if (this.memory.nextTowerPos) {
-      const look = this.room.lookAt(this.memory.nextTowerPos.x, this.memory.nextTowerPos.y);
-      _.forEach(look, (lookObject) => {
-        if (lookObject.type == LOOK_CONSTRUCTION_SITES) {
-          if (!this.memory.building) { this.memory.building = [] }
-          this.memory.building.push(lookObject.constructionSite!.id)
-          delete (this.memory.nextTowerPos);
-        }
-      });
+      const constructionSites = this.room.lookForAt(LOOK_CONSTRUCTION_SITES, this.memory.nextTowerPos.x, this.memory.nextTowerPos.y);
+      if (constructionSites.length > 0) {
+        if (!this.memory.building) { this.memory.building = [] }
+        this.memory.building.push(constructionSites[0].id)
+        delete (this.memory.nextTowerPos);
+      }
     }
     return this.towers;
   }
@@ -118,6 +118,8 @@ export class TowersManager extends TickRunner {
 
       var closestHostile = tower.pos.findClosestByRange(FIND_HOSTILE_CREEPS);
       if (closestHostile) {
+        var username = closestHostile.owner.username;
+        Game.notify(`User ${username} spotted in room ${this.room.name}`);
         tower.attack(closestHostile);
       }
     }

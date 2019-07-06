@@ -8,7 +8,7 @@ export class RoleBuilder {
       }) as StructureContainer[];
       containers = _.sortBy(containers, s => creep.pos.getRangeTo(s))
       // get from containers first
-      if (!!containers) {
+      if (containers.length > 0) {
         if (creep.pos.getRangeTo(containers[0]) > 1) {
           creep.task = Tasks.goTo(containers[0])
         } else {
@@ -18,7 +18,7 @@ export class RoleBuilder {
         // else get from source directly
         let sources = creep.room.find(FIND_SOURCES_ACTIVE) as Source[]
         sources = _.sortBy(sources, s => creep.pos.getRangeTo(s))
-        if (!!sources) {
+        if (sources.length > 0) {
           if (creep.pos.getRangeTo(sources[0]) > 1) {
             creep.task = Tasks.goTo(sources[0])
           } else {
@@ -27,12 +27,12 @@ export class RoleBuilder {
         }
       }
     } else {
-      let target = creep.room.find(FIND_CONSTRUCTION_SITES) as ConstructionSite[]
-      if (!!target) {
-        if (creep.pos.getRangeTo(target[0]) > 1) {
-          creep.task = Tasks.goTo(target[0])
+      let targets = creep.room.find(FIND_CONSTRUCTION_SITES) as ConstructionSite[]
+      if (targets.length > 0) {
+        if (creep.pos.getRangeTo(targets[0]) > 1) {
+          creep.task = Tasks.goTo(targets[0])
         } else {
-          creep.task = Tasks.build(target[0])
+          creep.task = Tasks.build(targets[0])
         }
       }
     }

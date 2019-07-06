@@ -4,7 +4,7 @@ import { RoleHarvester } from "roles/RoleHarvester";
 import { RoleTruck } from "roles/RoleTruck";
 import { RoleMiningSiteBuilder } from "roles/RoleMiningSiteBuilder";
 import { SpawningRequest } from "spawner/SpawningRequest";
-import { Utils } from "utils/Utils";
+import { u } from "utils/Utils";
 
 
 export class MiningSite extends TickRunner {
@@ -22,19 +22,43 @@ export class MiningSite extends TickRunner {
 
   constructor(public source: Source) {
     super()
-    this.memory = Memory.miningSites[this.source.id];
   }
 
-
   loadData() {
+    this.initMemory()
     if (this.memory) {
-
-      this.instanciateObjectsFromMemory<Creep>(this.harvesters, 'harvesters')
-      this.instanciateObjectsFromMemory<Creep>(this.trucks, 'trucks')
-      this.instanciateObjectsFromMemory<Creep>(this.builders, 'builders')
-      // this.instanciateObjectsFromMemory<StructureContainer>(this.container, 'container')
-      this.loadContainerState()
+      this.loadCreepsFromMemory()
+      this.loadContainerFromMemory()
     }
+  }
+
+  initMemory() {
+    if (!Memory.miningSites) { Memory.miningSites = {} }
+    if (!Memory.miningSites[this.source.id]) { Memory.miningSites[this.source.id] = {} }
+    this.memory = Memory.miningSites[this.source.id]
+  }
+
+  loadCreepsFromMemory() {
+    // add new spawned creep to mining site memory
+    let harvestersid: any[] = []
+    let trucksid: any[] = []
+    let buildersid: any[] = []
+    _.forEach(Game.creeps, creep => {
+      if (creep.memory.miningSourceId && creep.memory.miningSourceId == this.source.id) {
+        if (creep.name.includes('harvester') && !harvestersid.includes(creep.id)) {
+          this.harvesters.push(creep)
+          harvestersid.push(creep.id)
+        }
+        if (creep.name.includes('truck') && !trucksid.includes(creep.id)) {
+          this.trucks.push(creep)
+          trucksid.push(creep.id)
+        }
+        if (creep.name.includes('miningSiteBuilder') && !buildersid.includes(creep.id)) {
+          this.builders.push(creep)
+          buildersid.push(creep.id)
+        }
+      }
+    })
   }
 
   preCheck(): number {
@@ -145,22 +169,7 @@ export class MiningSite extends TickRunner {
     })
   }
 
-  // this.instanciateObjectsFromMemory<Creep>(this.harvesters, 'harvesters')
-  // loop through memory object via memoryKey
-  // remove from memory when object undefined
-  // add objects to instanceObject
-  instanciateObjectsFromMemory<T>(objects: T[], memoryKey: string): void {
-    this.memory[memoryKey] = _.reduce(this.memory[memoryKey] as string[], (out: string[], id: string) => {
-      const object = Game.getObjectById(id) as T
-      if (object) {
-        out.push(id);
-        objects.push(object)
-      }
-      return out;
-    }, []) as string[];
-  }
-
-  loadContainerState(): void {
+  loadContainerFromMemory(): void {
     if (this.memory.container) {
       this.container = Game.getObjectById(this.memory.container);
       if (!this.container) {
@@ -171,16 +180,20 @@ export class MiningSite extends TickRunner {
       this.buildingContainer = Game.getObjectById(this.memory.buildingContainer);
       if (!this.buildingContainer) {
         delete (this.memory.buildingContainer)
+        // building container finished, keep built container in memory
+        let containers = this.source.room.find(FIND_STRUCTURES, {
+          filter: (i) => i.structureType == STRUCTURE_CONTAINER && i.pos.x == this.memory.nextContainerPos!.x && i.pos.y == this.memory.nextContainerPos!.y
+        }) as StructureContainer[];
+        if (containers.length > 0) {
+          this.memory.container = containers[0].id
+        }
       }
     }
     if (this.memory.nextContainerPos) {
-      const look = this.source.room.lookAt(this.memory.nextContainerPos.x, this.memory.nextContainerPos.y);
-      _.forEach(look, (lookObject) => {
-        if (lookObject.type == LOOK_CONSTRUCTION_SITES) {
-          this.memory.buildingContainer = lookObject.constructionSite!.id
-          delete (this.memory.nextContainerPos)
-        }
-      });
+      const constructionSites = this.source.room.lookForAt(LOOK_CONSTRUCTION_SITES, this.memory.nextContainerPos.x, this.memory.nextContainerPos.y);
+      if (constructionSites.length > 0) {
+        this.memory.buildingContainer = constructionSites[0].id
+      }
     }
   }
 }

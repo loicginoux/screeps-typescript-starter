@@ -20,21 +20,54 @@ export class RoomCommander extends TickRunner {
 
   constructor(private room: Room) {
     super()
-    this.memory = Memory.rooms[this.room.name];
     this.spawner = new Spawner(this.room)
     this.architect = new Architect(this.room)
     this.miningMinister = new MiningMinister(this.room)
     this.towersManager = new TowersManager(this.room)
   }
 
+  employees(): any[] {
+    return [this.spawner, this.miningMinister, this.towersManager];
+  }
+
   loadData() {
-    this.instanciateObjectsFromMemory<Creep>(this.upgraders, 'upgraders')
-    this.instanciateObjectsFromMemory<Creep>(this.builders, 'builders')
+    this.initMemory()
+    if (this.memory) {
+      this.loadCreepsFromMemory();
+    }
     super.loadData();
   }
 
-  employees(): any[] {
-    return [this.spawner, this.miningMinister, this.towersManager];
+
+  initMemory() {
+    if (!Memory.rooms) { Memory.rooms = {} }
+    if (!Memory.rooms[this.room.name]) {
+      Memory.rooms[this.room.name] = {
+        minUpgraders: 2,
+        minBuilders: 2,
+        towersManager: {}
+      }
+    }
+    this.memory = Memory.rooms[this.room.name];
+  }
+
+  loadCreepsFromMemory() {
+
+    // add new spawned creep to mining site memory
+    let upgradersid: any[] = []
+    let buildersid: any[] = []
+    _.forEach(Game.creeps, creep => {
+      if (creep.memory.room && creep.memory.room == this.room.name) {
+        if (creep.name.includes('upgrader') && !upgradersid.includes(creep.id)) {
+          this.upgraders.push(creep)
+          upgradersid.push(creep.id)
+        }
+        if (creep.name.includes('builder') && !buildersid.includes(creep.id)) {
+          this.builders.push(creep)
+          buildersid.push(creep.id)
+        }
+      }
+    })
   }
 
   preCheck(): number {
@@ -93,31 +126,5 @@ export class RoomCommander extends TickRunner {
 
   roomBuildersNeeded(): boolean {
     return !!this.memory.ctrlRoads && ((this.minBuilders - this.builders.length) > 0);
-  }
-
-  loadUpgraders(): void {
-    let updatedUpgradersMemory: string[] = []
-    if (this.memory) {
-      _.forEach(this.memory.upgraders, i => {
-        const creep = Game.getObjectById(i) as Creep
-        if (creep) {
-          this.upgraders.push(creep)
-          updatedUpgradersMemory.push(creep.id)
-        }
-      });
-      // dead creep are removed from memory
-      Memory.rooms[this.room.name].upgraders = updatedUpgradersMemory
-    }
-  }
-
-  instanciateObjectsFromMemory<T>(objects: T[], memoryKey: string): void {
-    this.memory[memoryKey] = _.reduce(this.memory[memoryKey] as string[], (out: string[], id: string) => {
-      const object = Game.getObjectById(id) as T
-      if (object) {
-        out.push(id);
-        objects.push(object)
-      }
-      return out;
-    }, []) as string[];
   }
 }

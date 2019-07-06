@@ -13,7 +13,5 @@ export class MiningMinister extends TickRunner {
     }
   }
 
-  employees(): any[] {
-    return this.miningSites;
-  }
+  employees(): any[] { return this.miningSites; }
 }

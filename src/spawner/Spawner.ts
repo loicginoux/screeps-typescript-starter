@@ -1,5 +1,5 @@
 import * as subs from "./sub-spawners";
-import { Utils } from "utils/Utils";
+import { u } from "utils/Utils";
 import { SpawningRequest } from "spawner/SpawningRequest";
 import { TickRunner } from "TickRunner";
 
@@ -21,7 +21,7 @@ export class Spawner extends TickRunner {
       filter: i => i.structureType === STRUCTURE_SPAWN && !i.spawning && i.energy > 0
     }) as StructureSpawn[] | null;
 
-    // Utils.log('Spawner precheck', this.availableSpawner)
+    // u.log('Spawner precheck', this.availableSpawner)
 
     if (!this.availableSpawner) {
       return ERR_NOT_FOUND
@@ -41,8 +41,8 @@ export class Spawner extends TickRunner {
     this.spawningRequests = _.sortBy(this.spawningRequests, req => -1 * req.priority)
     // only process 1 request per spawner in room
     let processableRequests = _.take(this.spawningRequests, this.availableSpawner!.length)
-    // Utils.log('Spawner act', processableRequests)
-    // Utils.log("this.availableSpawner", this.availableSpawner)
+    // u.log('Spawner act', processableRequests)
+    // u.log("this.availableSpawner", this.availableSpawner)
     _.forEach(processableRequests, req => {
       req.spawner = this.availableSpawner!.pop();
       this.spawn(req)
@@ -57,7 +57,7 @@ export class Spawner extends TickRunner {
   // build sub spawner
   getSpawnerFor(spawningRequest: SpawningRequest) {
     // upcase first letter to get class
-    let className = `${_.startCase(spawningRequest.role)}Spawner`;
+    let className = `${u.capitalizeFirstLetter(spawningRequest.role)}Spawner`;
     let subSpawnerClass: any = (subs as any)[className]
     if (subSpawnerClass === undefined || subSpawnerClass === null) {
       throw new Error(`Class type of \'${className}\' is not a spawner`);
@@ -67,7 +67,7 @@ export class Spawner extends TickRunner {
   }
 
   spawn(spawningRequest: SpawningRequest): Creep {
-    Utils.log(`trying spawning ${spawningRequest.role}`)
+    u.log(`trying spawning ${spawningRequest.role}`)
     return this.getSpawnerFor(spawningRequest).spawn();
   }
 }

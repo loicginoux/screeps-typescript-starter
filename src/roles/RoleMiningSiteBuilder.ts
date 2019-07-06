@@ -10,7 +10,7 @@ export class RoleMiningSiteBuilder {
         creep.task = Tasks.harvest(source)
       }
     } else {
-      // Utils.log("findClosestEnergyStructure")
+      // u.log("findClosestEnergyStructure")
       const constructionSiteId = Memory.miningSites[source.id].buildingContainer
       if (constructionSiteId) {
         const constructionSite = Game.getObjectById(constructionSiteId) as ConstructionSite

@@ -1,5 +1,5 @@
 import { default as Tasks } from 'creep-tasks'
-import { Utils } from 'utils/Utils';
+import { u } from 'utils/Utils';
 
 export class RoleHarvester {
   public static newTask(creep: Creep, source: Source): void {

@@ -1,4 +1,4 @@
-import { Utils } from "utils/Utils";
+import { u } from "utils/Utils";
 
 export class Architect {
   constructor(private room: Room) {
@@ -17,7 +17,7 @@ export class Architect {
     let res = -1
     if (position) {
       res = Game.rooms[this.room.name].createConstructionSite(position.x, position.y, STRUCTURE_CONTAINER);
-      Utils.log(`createConstructionSite container ${res}`)
+      u.log(`createConstructionSite container ${res}`)
       if (res == OK) {
         miningSite.memory.nextContainerPos = position
       }
@@ -70,7 +70,7 @@ export class Architect {
     let res = -1
     if (position) {
       res = room.createConstructionSite(position.x, position.y, STRUCTURE_TOWER);
-      Utils.log(`createConstructionSite tower ${res}`)
+      u.log(`createConstructionSite tower ${res}`)
       if (res == OK) {
         Memory.rooms[room.name].towersManager.nextTowerPos = position
       }

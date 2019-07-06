@@ -1,4 +1,4 @@
-import { Utils } from "./Utils";
+import { u } from "./Utils";
 
 type InotifCallback = (...args: any[]) => number;
 
@@ -20,12 +20,12 @@ export class PubSub {
     } else {
       this.registry[name].push(fn);
     }
-    console.log("subscribe to", name, this.registry[name].length)
+    // console.log("subscribe to", name, this.registry[name].length)
 
   }
 
   public publish(name: PubSubEventTypes, ...args: any[]) {
-    Utils.log(name)
+    console.log(name, JSON.stringify(args))
     if (!this.registry[name]) return;
     _.forEach(this.registry[name], x => {
       x.apply(null, args);

@@ -1,4 +1,4 @@
-import { Utils } from "utils/Utils";
+import { u } from "utils/Utils";
 
 export abstract class TickRunner {
   protected preCheckResult: number = OK;
@@ -8,11 +8,12 @@ export abstract class TickRunner {
   }
 
   public run(): void {
-    this.loadData();
+    try { this.loadData(); } catch (e) { console.log("error with runner loadData\n", e.stack); }
+
     // pre check for all first
     if (this.preCheck() == OK) {
       // action for all
-      this.act()
+      try { this.act() } catch (e) { console.log("error with runner act\n", e.stack); }
     }
     this.finalize()
   }
@@ -25,9 +26,9 @@ export abstract class TickRunner {
   // instanciate employees
   // if overwritten, method should call super.loadData() so employees run the method too
   loadData(): void {
-    // Utils.log('loadData for', this.constructor.name)
+    // u.log('loadData for', this.constructor.name)
     _.each(this.employees(), employee => {
-      // Utils.log('employee', employee.constructor.name)
+      // u.log('employee', employee.constructor.name)
       employee.loadData()
     });
   }
@@ -35,9 +36,9 @@ export abstract class TickRunner {
   // check for necessity before acting
   // if overwritten, method should call super.preCheck() so employees run the method too
   preCheck(): number {
-    // Utils.log('preCheck for', this.constructor.name)
+    // u.log('preCheck for', this.constructor.name)
     _.each(this.employees(), employee => {
-      // Utils.log('employee', employee.constructor.name)
+      // u.log('employee', employee.constructor.name)
       employee.preCheck()
     });
     return this.preCheckResult;
@@ -46,7 +47,7 @@ export abstract class TickRunner {
   // do creep tasks
   // if overwritten, method should call super.act() so employees run the method too
   act(): void {
-    // Utils.log('act for', this.constructor.name)
+    // u.log('act for', this.constructor.name)
     _.each(this.employees(), employee => {
       if (employee.preCheckResult == OK) {
         employee.act()
