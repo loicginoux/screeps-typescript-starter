@@ -5,12 +5,14 @@ export class Architect {
     global.pubSub.subscribe('BUILD_CONTAINER_NEEDED', this.buildContainer.bind(this))
     global.pubSub.subscribe('BUILD_ROAD_NEEDED', this.buildRoad.bind(this))
     global.pubSub.subscribe('TOWER_REQUEST', this.buildTower.bind(this))
+    global.pubSub.subscribe('BUILD_EXTENSION', this.buildExtensions.bind(this))
   }
 
   buildContainer(...args: any[]): number {
     console.log("buildContainer")
     const miningSite = args[0].miningSite
     let position = args[0].position
+    let memoryKey = args[0].memoryKey
     if (!position) {
       position = this.findContainerPositionForSource(miningSite.source)
     }
@@ -19,7 +21,7 @@ export class Architect {
       res = Game.rooms[this.room.name].createConstructionSite(position.x, position.y, STRUCTURE_CONTAINER);
       u.log(`createConstructionSite container ${res}`)
       if (res == OK) {
-        miningSite.memory.nextContainerPos = position
+        miningSite.memory[memoryKey] = position
       }
     }
     return res
@@ -80,5 +82,63 @@ export class Architect {
 
   findPositionForTower(room: Room): Position {
     return { x: 1, y: 1 } as Position
+  }
+
+  buildExtensions(...args: any[]): number {
+    console.log("buildExtensions", args)
+    let near = args[0].near
+    let extensionCount = args[0].extensionCount
+    let room = args[0].room
+    let res = -1
+    if (extensionCount > 0 && room && near) {
+      let spotsFound = this.findEmptySpotsNear(room, near, extensionCount)
+      spotsFound.forEach((spot: Position) => {
+        room.createConstructionSite(spot.x, spot.y, STRUCTURE_EXTENSION)
+      });
+    }
+    return res;
+  }
+
+  //
+  // JSON.stringify(mainRoom.architect.findEmptySpotsNear(mainRoom.room, Game.spawns.Spawn1.pos, 3))
+  findEmptySpotsNear(room: Room, near: Position, spotsNumber = 0): Position[] {
+    let center = near
+    let emptySpots = [] as Position[];
+    if (!room || !near) {
+      return emptySpots
+    }
+    let allFound = false
+    console.log("center", center.x, center.y)
+    const terrain = new Room.Terrain(room.name);
+    for (let range = 1; range < 4; range++) {
+      if (allFound) { break }
+      for (let i = range * -1; i <= range; i++) {
+        if (allFound) { break }
+        for (let j = range * -1; j <= range; j++) {
+          if (allFound) { break }
+          let spot = {
+            x: center.x + i,
+            y: center.y + j
+          }
+          // https://stackoverflow.com/questions/17813807/get-the-closest-squares-in-a-grid-like-system
+          // just to be sure to not pass again to same spot bettween 2 iterations of 'range'
+          let spotRange = Math.abs(center.y - spot.y) + Math.abs(center.x - spot.x)
+          console.log("spot", spot.x, spot.y, center.x, center.y, "range:", spotRange)
+          if (spotRange == range) {
+            // avoid walls and structures
+            let somethingAtThisSpot = room.lookAt(spot.x, spot.y)
+              .find(i => i.type === LOOK_STRUCTURES || (i.type === LOOK_TERRAIN && i.terrain === "wall"));
+            if (somethingAtThisSpot) {
+              continue;
+            } else {
+              emptySpots.push(spot)
+              // loop terminator
+              allFound = (emptySpots.length == spotsNumber)
+            }
+          }
+        }
+      }
+    }
+    return emptySpots
   }
 }

@@ -3,14 +3,16 @@
 type PubSubEventTypes =
   | BUILD_CONTAINER_NEEDED
   | BUILD_ROAD_NEEDED
-  | SPAWN_REQUEST
+  | BUILD_EXTENSION
   | TOWER_REQUEST
+  | SPAWN_REQUEST
   ;
 
 
 type BUILD_CONTAINER_NEEDED = "BUILD_CONTAINER_NEEDED";
 type BUILD_ROAD_NEEDED = "BUILD_ROAD_NEEDED";
 type SPAWN_REQUEST = "SPAWN_REQUEST";
+type BUILD_EXTENSION = "BUILD_EXTENSION";
 type TOWER_REQUEST = "TOWER_REQUEST";
 
 interface CreepMemory {
@@ -22,8 +24,11 @@ interface CreepMemory {
 
 interface MiningSiteMemory {
   container?: string,
+  container2?: string,
   nextContainerPos?: Position,
+  nextContainerPos2?: Position,
   buildingContainer?: string,
+  buildingContainer2?: string,
   avoid?: boolean,
   roads?: boolean,
   [object: string]: string[] | string | boolean | undefined | Position
@@ -48,6 +53,7 @@ interface Memory {
 interface RoomMemory {
   avoid?: boolean;
   minUpgraders?: number
+  extensions?: number
   towersManager: TowerManagerMemory
   ctrlRoads?: boolean,
   [object: string]: string[] | string | boolean | number | undefined | TowerManagerMemory

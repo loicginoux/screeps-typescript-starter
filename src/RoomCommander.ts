@@ -7,6 +7,8 @@ import { SpawningRequest } from "spawner/SpawningRequest";
 import { RoleUpgrader } from "roles/RoleUpgrader";
 import { RoleBuilder } from "roles/RoleBuilder";
 import { RoomPlanner } from "room_planning/RoomPlanner";
+import { u } from 'utils/Utils';
+
 
 export class RoomCommander extends TickRunner {
   spawner: Spawner;
@@ -15,7 +17,8 @@ export class RoomCommander extends TickRunner {
   towersManager: TowersManager;
   roomPlanner: RoomPlanner;
   minUpgraders = 2;
-  minBuilders = 2;
+  minBuilders = 4;
+  extensionsNeededCount: number | null;
   upgraders: Creep[] = [];
   builders: Creep[] = [];
   memory: RoomMemory;
@@ -48,7 +51,8 @@ export class RoomCommander extends TickRunner {
       Memory.rooms[this.room.name] = {
         minUpgraders: 2,
         minBuilders: 2,
-        towersManager: {}
+        towersManager: {},
+        extensions: 0
       }
     }
     this.memory = Memory.rooms[this.room.name];
@@ -82,14 +86,10 @@ export class RoomCommander extends TickRunner {
       } as SpawningRequest)
     }
 
-    if (!this.memory.ctrlRoads) {
-      let controllerEnergeySources = _.sortBy(this.room.find(FIND_SOURCES_ACTIVE), s => this.room.controller!.pos.getRangeTo(s))
-      if (controllerEnergeySources.length > 0) {
-        global.pubSub.publish('BUILD_ROAD_NEEDED', {
-          from: this.room.controller!.pos,
-          to: controllerEnergeySources[0].pos
-        })
-      }
+    // build roads to controller
+    // if destroyed will be rebuilt every 1000
+    if (!this.memory.ctrlRoads || u.every(1000)) {
+      this.roomPlanner.buildControllerRoads()
       this.memory.ctrlRoads = true
     }
 
@@ -99,6 +99,19 @@ export class RoomCommander extends TickRunner {
         priority: 1,
         room: this.room
       } as SpawningRequest)
+    }
+    console.log("this.extensionsNeeded()", this.extensionsNeeded())
+    if (this.extensionsNeeded() > 0) {
+      let firstSpawner = this.room.find(FIND_MY_STRUCTURES, {
+        filter: i => i.structureType === STRUCTURE_SPAWN
+      }) as StructureSpawn[];
+      if (firstSpawner[0]) {
+        global.pubSub.publish('BUILD_EXTENSION', {
+          near: firstSpawner[0].pos,
+          extensionCount: this.extensionsNeeded(),
+          room: this.room,
+        })
+      }
     }
 
     super.preCheck()
@@ -129,5 +142,21 @@ export class RoomCommander extends TickRunner {
 
   roomBuildersNeeded(): boolean {
     return !!this.memory.ctrlRoads && ((this.minBuilders - this.builders.length) > 0);
+  }
+
+  extensionsNeeded(): number {
+    if (this.extensionsNeededCount) {
+      return this.extensionsNeededCount
+    }
+    this.extensionsNeededCount = 0
+    let extensions_per_level = [0, 0, 5, 10, 20, 30, 40, 50, 60]
+    if (this.room.controller) {
+      this.extensionsNeededCount = extensions_per_level[this.room.controller.level]
+      if (!this.memory.extensions) {
+        this.memory.extensions = 0
+      }
+      this.extensionsNeededCount -= this.memory.extensions
+    }
+    return this.extensionsNeededCount;
   }
 }
