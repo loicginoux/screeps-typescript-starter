@@ -4,7 +4,7 @@ export class RoomPlanner {
   constructor(public room: Room) {
   }
 
-  run() {
+  buildFortressRoads() {
     let firstSpawner = this.room.find(FIND_MY_STRUCTURES, {
       filter: i => i.structureType === STRUCTURE_SPAWN
     })
@@ -17,6 +17,16 @@ export class RoomPlanner {
           this.room.createConstructionSite(roadPos.x, roadPos.y, STRUCTURE_ROAD)
         }
       });
+    }
+  }
+
+  buildControllerRoads() {
+    let controllerEnergeySources = _.sortBy(this.room.find(FIND_SOURCES_ACTIVE), s => this.room.controller!.pos.getRangeTo(s))
+    if (controllerEnergeySources.length > 0) {
+      global.pubSub.publish('BUILD_ROAD_NEEDED', {
+        from: this.room.controller!.pos,
+        to: controllerEnergeySources[0].pos
+      })
     }
   }
 }
