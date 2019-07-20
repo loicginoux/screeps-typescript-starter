@@ -31,3 +31,4 @@ var sources = _.sortBy(creep.room.find(FIND_SOURCES_ACTIVE), s => creep.pos.getR
 
 // create construction site
 Game.rooms.E17N41.createConstructionSite(22, 13, STRUCTURE_CONTAINER)
+Game.rooms.E17N41.createConstructionSite(7, 40, STRUCTURE_WALL);
