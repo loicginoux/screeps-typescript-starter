@@ -2,7 +2,7 @@ import { default as Tasks } from 'creep-tasks'
 
 export class RoleBuilder {
   public static newTask(creep: Creep): void {
-    if (creep.carry.energy < creep.carryCapacity) {
+    if (creep.carry.energy == 0) {
       this.getEnergy(creep)
     } else {
       let target = this.tryBuilding(creep);
@@ -91,7 +91,16 @@ export class RoleBuilder {
 
   public static findRepairSite(creep: Creep): Structure {
     const targets = creep.room.find(FIND_STRUCTURES, {
-      filter: object => object.hits < object.hitsMax
+      filter: (structure) => {
+        let res;
+        if (structure.structureType == STRUCTURE_WALL) {
+          // limit wall strength to 5000
+          res = (structure.hits < structure.hitsMax && structure.hits < 5000)
+        } else {
+          res = structure.hits < structure.hitsMax
+        }
+        return res
+      }
     });
 
     targets.sort((a, b) => a.hits - b.hits);

@@ -4,7 +4,7 @@ import { default as Tasks } from 'creep-tasks'
 export class RoleTruck {
   public static newTask(creep: Creep, container: StructureContainer): void {
     // creep has no evergy, go to container 1 get some
-    if (creep.carry.energy < creep.carryCapacity) {
+    if (creep.carry.energy == 0) {
       this.gotoAndWithdraw(creep, container)
     } else {
       let target = this.findClosestEnergyStructure(creep, container)
@@ -15,7 +15,7 @@ export class RoleTruck {
         // all energy structures full, all containers full, find a controller
         const controller = creep.room.controller
         if (controller) {
-          this.gotoAndUpgrade(creep, controller)
+          // this.gotoAndUpgrade(creep, controller)
         }
       }
     }
@@ -49,7 +49,7 @@ export class RoleTruck {
   }
 
   public static findClosestEnergyStructure(creep: Creep, container: StructureContainer): EnergyStructure {
-    return creep.room.find(FIND_STRUCTURES, {
+    let structures = creep.room.find(FIND_STRUCTURES, {
       filter: (structure) => {
         return (structure.structureType == STRUCTURE_EXTENSION ||
           structure.structureType == STRUCTURE_SPAWN ||
@@ -57,6 +57,8 @@ export class RoleTruck {
         // structure.structureType == STRUCTURE_TOWER) && structure.energy < structure.energyCapacity ||
         // structure.structureType == STRUCTURE_CONTAINER && structure.id != container.id;
       }
-    })[0] as EnergyStructure;
+    }) as EnergyStructure[];
+    structures = _.sortBy(structures, s => creep.pos.getRangeTo(s))
+    return structures[0]
   }
 }

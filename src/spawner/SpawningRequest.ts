@@ -21,8 +21,8 @@ type SpawnType =
 
 export interface SpawningRequest {
   role: SpawnType,
+  room: Room,
   miningSite?: MiningSite
   priority: number,
-  room?: Room,
   spawner?: StructureSpawn
 }

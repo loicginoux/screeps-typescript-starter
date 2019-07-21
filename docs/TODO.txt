@@ -1,7 +1,4 @@
-- architect should create extension site
-- builder should build extensions
-- creeps die on containers
 - spwaner should create better creeps by using extensions if they exists
-- builder should spawn only when building site needed
+- creeps die on containers
 - installer grafana https://github.com/bonzaiferroni/bonzAI/wiki/Screepspl.us-agent-with-Compute-Engine
 - installer traveler https://github.com/bonzaiferroni/Traveler/

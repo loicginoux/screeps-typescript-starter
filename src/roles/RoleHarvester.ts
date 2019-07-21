@@ -1,9 +1,8 @@
 import { default as Tasks } from 'creep-tasks'
-import { u } from 'utils/Utils';
 
 export class RoleHarvester {
   public static newTask(creep: Creep, source: Source): void {
-    if (creep.carry.energy < creep.carryCapacity) {
+    if (creep.carry.energy == 0) {
       if (creep.pos.getRangeTo(source) > 1) {
         creep.task = Tasks.goTo(source.pos)
       } else {

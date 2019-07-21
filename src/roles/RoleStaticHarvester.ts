@@ -2,7 +2,7 @@ import { default as Tasks } from 'creep-tasks'
 
 export class RoleStaticHarvester {
   public static newTask(creep: Creep, source: Source, container: StructureContainer): void {
-    if (creep.carry.energy < creep.carryCapacity) {
+    if (creep.carry.energy == 0) {
       if (creep.pos.getRangeTo(source) > 1) {
         creep.task = Tasks.goTo(source.pos)
       } else {

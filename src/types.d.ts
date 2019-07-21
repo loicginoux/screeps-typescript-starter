@@ -52,8 +52,8 @@ interface Memory {
 
 interface RoomMemory {
   avoid?: boolean;
-  minUpgraders?: number
   extensions?: number
+  storage?: boolean
   towersManager: TowerManagerMemory
   ctrlRoads?: boolean,
   [object: string]: string[] | string | boolean | number | undefined | TowerManagerMemory

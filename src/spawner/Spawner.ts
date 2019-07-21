@@ -18,12 +18,10 @@ export class Spawner extends TickRunner {
 
   preCheck() {
     this.availableSpawner = this.room.find(FIND_MY_STRUCTURES, {
-      filter: i => i.structureType === STRUCTURE_SPAWN && !i.spawning && i.energy > 0
+      filter: i => i.structureType === STRUCTURE_SPAWN && !i.spawning
     }) as StructureSpawn[] | null;
 
-    // u.log('Spawner precheck', this.availableSpawner)
-
-    if (!this.availableSpawner) {
+    if (!this.availableSpawner || this.room.energyAvailable == 0) {
       return ERR_NOT_FOUND
     }
     if (this.availableSpawner.length == 0) {

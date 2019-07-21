@@ -3,7 +3,7 @@ import { default as Tasks } from 'creep-tasks'
 export class RoleUpgrader {
   public static newTask(creep: Creep): void {
 
-    if (creep.carry.energy < creep.carryCapacity) {
+    if (creep.carry.energy == 0) {
       this.getEnergy(creep);
     } else {
       const controller = creep.room.controller

@@ -17,7 +17,7 @@ export class RoomCommander extends TickRunner {
   towersManager: TowersManager;
   roomPlanner: RoomPlanner;
   minUpgraders = 2;
-  minBuilders = 4;
+  minBuilders = 2;
   extensionsNeededCount: number | null;
   upgraders: Creep[] = [];
   builders: Creep[] = [];
@@ -49,8 +49,6 @@ export class RoomCommander extends TickRunner {
     if (!Memory.rooms) { Memory.rooms = {} }
     if (!Memory.rooms[this.room.name]) {
       Memory.rooms[this.room.name] = {
-        minUpgraders: 2,
-        minBuilders: 2,
         towersManager: {},
         extensions: 0
       }
@@ -100,7 +98,7 @@ export class RoomCommander extends TickRunner {
         room: this.room
       } as SpawningRequest)
     }
-    console.log("this.extensionsNeeded()", this.extensionsNeeded())
+
     if (this.extensionsNeeded() > 0) {
       let firstSpawner = this.room.find(FIND_MY_STRUCTURES, {
         filter: i => i.structureType === STRUCTURE_SPAWN
@@ -113,6 +111,19 @@ export class RoomCommander extends TickRunner {
         })
       }
     }
+
+    if (this.storageNeeded()) {
+      let firstSpawner = this.room.find(FIND_MY_STRUCTURES, {
+        filter: i => i.structureType === STRUCTURE_SPAWN
+      }) as StructureSpawn[];
+      if (firstSpawner[0]) {
+        global.pubSub.publish('BUILD_STORAGE', {
+          near: firstSpawner[0].pos,
+          room: this.room,
+        })
+      }
+    }
+
 
     super.preCheck()
     return OK;
@@ -149,14 +160,30 @@ export class RoomCommander extends TickRunner {
       return this.extensionsNeededCount
     }
     this.extensionsNeededCount = 0
+    let extensionsAtLevel = 0
+    if (!this.memory.extensions) {
+      this.memory.extensions = 0
+    }
     let extensions_per_level = [0, 0, 5, 10, 20, 30, 40, 50, 60]
     if (this.room.controller) {
-      this.extensionsNeededCount = extensions_per_level[this.room.controller.level]
-      if (!this.memory.extensions) {
-        this.memory.extensions = 0
-      }
-      this.extensionsNeededCount -= this.memory.extensions
+      extensionsAtLevel = extensions_per_level[this.room.controller.level]
+      this.extensionsNeededCount = extensionsAtLevel - this.memory.extensions
+      // cache extension currently building so it triggers event only once
+      this.memory.extensions = extensionsAtLevel;
     }
     return this.extensionsNeededCount;
+  }
+
+  storageNeeded(): boolean {
+    let needed = false;
+    if (!this.memory.storage) {
+      this.memory.storage = false
+    }
+    if (this.room.controller && this.room.controller.level >= 4 && !this.memory.storage) {
+      needed = true
+      // cache extension currently building so it triggers event only once
+      this.memory.storage = true;
+    }
+    return needed;
   }
 }

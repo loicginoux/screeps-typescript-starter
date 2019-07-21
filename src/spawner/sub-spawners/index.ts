@@ -3,3 +3,4 @@ export { default as TruckSpawner } from "./TruckSpawner";
 export { default as BuilderSpawner } from "./BuilderSpawner";
 export { default as MiningSiteBuilderSpawner } from "./MiningSiteBuilderSpawner";
 export { default as UpgraderSpawner } from "./UpgraderSpawner";
+export { default as SoldierSpawner } from "./SoldierSpawner";

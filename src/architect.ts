@@ -6,6 +6,7 @@ export class Architect {
     global.pubSub.subscribe('BUILD_ROAD_NEEDED', this.buildRoad.bind(this))
     global.pubSub.subscribe('TOWER_REQUEST', this.buildTower.bind(this))
     global.pubSub.subscribe('BUILD_EXTENSION', this.buildExtensions.bind(this))
+    global.pubSub.subscribe('BUILD_STORAGE', this.buildStorage.bind(this))
   }
 
   buildContainer(...args: any[]): number {
@@ -55,7 +56,8 @@ export class Architect {
     if (from.roomName != to.roomName && from.roomName == this.room.name) { return -1 }
     const pathSteps = this.room.findPath(from, to, {
       ignoreCreeps: true,
-      maxRooms: 1
+      maxRooms: 1,
+      ignore: [from, to] // do not create road on start and end point
     })
     _.forEach(pathSteps, (step) => {
       this.room.createConstructionSite(step.x, step.y, STRUCTURE_ROAD)
@@ -92,8 +94,24 @@ export class Architect {
     let res = -1
     if (extensionCount > 0 && room && near) {
       let spotsFound = this.findEmptySpotsNear(room, near, extensionCount)
+      console.log("spotsFound", JSON.stringify(spotsFound))
       spotsFound.forEach((spot: Position) => {
         room.createConstructionSite(spot.x, spot.y, STRUCTURE_EXTENSION)
+      });
+    }
+    return res;
+  }
+
+  buildStorage(...args: any[]): number {
+    let near = args[0].near
+    let room = args[0].room
+    console.log("buildStorage", near, room)
+    let res = -1
+    if (room && near) {
+      let spotsFound = this.findEmptySpotsNear(room, near, 1)
+      console.log("spotsFound", JSON.stringify(spotsFound))
+      spotsFound.forEach((spot: Position) => {
+        room.createConstructionSite(spot.x, spot.y, STRUCTURE_STORAGE)
       });
     }
     return res;
@@ -109,8 +127,7 @@ export class Architect {
     }
     let allFound = false
     console.log("center", center.x, center.y)
-    const terrain = new Room.Terrain(room.name);
-    for (let range = 1; range < 4; range++) {
+    for (let range = 1; range < 50; range++) {
       if (allFound) { break }
       for (let i = range * -1; i <= range; i++) {
         if (allFound) { break }

@@ -71,6 +71,7 @@ export class MiningSite extends TickRunner {
       global.pubSub.publish('SPAWN_REQUEST', {
         role: 'harvester',
         miningSite: this,
+        room: this.source.room,
         priority: 2
       } as SpawningRequest)
     }
@@ -78,6 +79,7 @@ export class MiningSite extends TickRunner {
     if (this.trucksNeeded() > 0) {
       global.pubSub.publish('SPAWN_REQUEST', {
         role: 'truck',
+        room: this.source.room,
         miningSite: this,
         priority: 2
       } as SpawningRequest)
@@ -88,6 +90,7 @@ export class MiningSite extends TickRunner {
       global.pubSub.publish('SPAWN_REQUEST', {
         role: 'miningSiteBuilder',
         miningSite: this,
+        room: this.source.room,
         priority: 1
       } as SpawningRequest)
     }
