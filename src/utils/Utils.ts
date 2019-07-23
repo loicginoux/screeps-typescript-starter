@@ -15,6 +15,12 @@ class Utils {
   static every(freq: number): boolean {
     return Game.time % freq === 0
   }
+
+  static compareValues(v1: number, v2: number): number {
+    return (v1 > v2)
+      ? 1
+      : (v1 < v2 ? -1 : 0);
+  };
 }
 
 export const u = Utils;

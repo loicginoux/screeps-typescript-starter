@@ -1,4 +1,6 @@
 import { ErrorMapper } from "utils/ErrorMapper";
+import "utils/Traveler";
+import 'creep-tasks/prototypes'
 import { Empire } from "Empire";
 import { PubSub } from "utils/PubSub";
 import { u } from "utils/Utils";

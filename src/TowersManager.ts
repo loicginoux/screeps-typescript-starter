@@ -26,29 +26,16 @@ export class TowersManager extends TickRunner {
   }
 
   loadTowers(): StructureTower[] {
-    this.towers = []
-    if (this.memory.towers) {
-      this.towers = this.memory.towers
-        .map(id => Game.getObjectById(id) as StructureTower)
-        .filter(i => i)
-      this.memory.towers = this.towers.map(t => t.id)
-    }
+    this.towers = this.room.find(FIND_STRUCTURES, { filter: (i) => i.structureType == STRUCTURE_TOWER }) as StructureTower[];
 
-    if (this.memory.building) {
-      this.memory.building = this.memory.building
-        .map(i => Game.getObjectById(i) as StructureTower)
-        .filter(i => i)
-        .map(i => i.id)
-    }
-
-    if (this.memory.nextTowerPos) {
-      const constructionSites = this.room.lookForAt(LOOK_CONSTRUCTION_SITES, this.memory.nextTowerPos.x, this.memory.nextTowerPos.y);
-      if (constructionSites.length > 0) {
-        if (!this.memory.building) { this.memory.building = [] }
-        this.memory.building.push(constructionSites[0].id)
-        delete (this.memory.nextTowerPos);
-      }
-    }
+    // if (this.memory.nextTowerPos) {
+    //   const constructionSites = this.room.lookForAt(LOOK_CONSTRUCTION_SITES, this.memory.nextTowerPos.x, this.memory.nextTowerPos.y);
+    //   if (constructionSites.length > 0) {
+    //     if (!this.memory.building) { this.memory.building = [] }
+    //     this.memory.building.push(constructionSites[0].id)
+    //     delete (this.memory.nextTowerPos);
+    //   }
+    // }
     return this.towers;
   }
 
@@ -73,10 +60,14 @@ export class TowersManager extends TickRunner {
   preCheck(): number {
     const missingTowers = this.optimalTowerNumber() - this.towers.length;
     if (missingTowers) {
-      global.pubSub.publish('TOWER_REQUEST', {
-        roomName: this.room.name,
-        priority: 10,
-      })
+      let firstSpawner = this.room.find(FIND_MY_STRUCTURES, { filter: i => i.structureType === STRUCTURE_SPAWN }) as StructureSpawn[];
+      if (firstSpawner[0]) {
+        global.pubSub.publish('TOWER_REQUEST', {
+          roomName: this.room.name,
+          near: firstSpawner[0].pos,
+          priority: 10,
+        })
+      }
     }
     return OK;
   }
@@ -107,33 +98,39 @@ export class TowersManager extends TickRunner {
   }
 
   singleTowerRun(tower: StructureTower) {
-    if (tower) {
-      var closestHostile = tower.pos.findClosestByRange(FIND_HOSTILE_CREEPS);
-      if (closestHostile) {
-        var username = closestHostile.owner.username;
+    var closestHostile = tower.pos.findClosestByRange(FIND_HOSTILE_CREEPS);
+    if (closestHostile) {
+      // keep track for replay
+      this.memory.lastAttack = Game.time
+      var username = closestHostile.owner.username;
+      if (username != "Invader") {
         Game.notify(`User ${username} spotted in room ${this.room.name}`);
-        tower.attack(closestHostile);
       }
+      tower.attack(closestHostile);
+      global.pubSub.publish('ROOM_ATTACKED', {
+        room: this.room.name,
+        priority: 100,
+      })
+    }
 
-      var closestDamagedStructure = tower.pos.findClosestByRange(FIND_STRUCTURES, {
-        filter: (structure) => {
-          let res;
-          if (structure.structureType == STRUCTURE_WALL) {
-            // limit wall strength to 5000
-            res = (structure.hits < structure.hitsMax && structure.hits < 5000)
-          } else if (structure.structureType == STRUCTURE_ROAD) {
-            // do not repair roads, leave it to builders
-            res = false
-          } else {
-            res = structure.hits < structure.hitsMax
-          }
-          return res
+    var closestDamagedStructure = tower.pos.findClosestByRange(FIND_STRUCTURES, {
+      filter: (structure) => {
+        let res;
+        if (structure.structureType == STRUCTURE_WALL) {
+          // limit wall strength to 5000
+          res = (structure.hits < structure.hitsMax && structure.hits < 5000)
+        } else if (structure.structureType == STRUCTURE_ROAD) {
+          // do not repair roads, leave it to builders
+          res = false
+        } else {
+          res = structure.hits < structure.hitsMax
         }
-      });
-
-      if (closestDamagedStructure) {
-        tower.repair(closestDamagedStructure);
+        return res
       }
+    });
+
+    if (closestDamagedStructure) {
+      tower.repair(closestDamagedStructure);
     }
   }
 }

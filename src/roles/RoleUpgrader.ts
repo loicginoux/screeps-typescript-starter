@@ -1,4 +1,4 @@
-import { default as Tasks } from 'creep-tasks'
+import { Tasks } from 'creep-tasks/Tasks'
 
 export class RoleUpgrader {
   public static newTask(creep: Creep): void {

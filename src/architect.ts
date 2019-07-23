@@ -56,9 +56,11 @@ export class Architect {
     if (from.roomName != to.roomName && from.roomName == this.room.name) { return -1 }
     const pathSteps = this.room.findPath(from, to, {
       ignoreCreeps: true,
-      maxRooms: 1,
-      ignore: [from, to] // do not create road on start and end point
+      maxRooms: 1
     })
+    // remove last step to not build road on arrival
+    pathSteps.pop();
+
     _.forEach(pathSteps, (step) => {
       this.room.createConstructionSite(step.x, step.y, STRUCTURE_ROAD)
     })
@@ -67,16 +69,17 @@ export class Architect {
 
   buildTower(...args: any[]): number {
     const room = Game.rooms[args[0].roomName]
-    let position = args[0].position
-    if (!position) {
-      position = this.findPositionForTower(room)
-    }
+    const near = args[0].near
     let res = -1
-    if (position) {
-      res = room.createConstructionSite(position.x, position.y, STRUCTURE_TOWER);
-      u.log(`createConstructionSite tower ${res}`)
-      if (res == OK) {
-        Memory.rooms[room.name].towersManager.nextTowerPos = position
+    if (room && near) {
+      let spotsFound = this.findEmptySpotsNear(room, near, 1)
+      console.log("spotsFound", JSON.stringify(spotsFound))
+      if (spotsFound.length > 0) {
+        res = room.createConstructionSite(spotsFound[0].x, spotsFound[0].y, STRUCTURE_TOWER)
+        // if (res == OK) {
+        //   Memory.rooms[room.name].towersManager.nextTowerPos = spotsFound[0]
+        // }
+
       }
     }
     return res
@@ -127,7 +130,7 @@ export class Architect {
     }
     let allFound = false
     console.log("center", center.x, center.y)
-    for (let range = 1; range < 50; range++) {
+    for (let range = 1; range < 20; range++) {
       if (allFound) { break }
       for (let i = range * -1; i <= range; i++) {
         if (allFound) { break }

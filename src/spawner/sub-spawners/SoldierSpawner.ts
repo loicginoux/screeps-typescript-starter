@@ -8,10 +8,6 @@ export default class SoldierSpawner extends SubSpawner {
         maxCount: -1
       },
       {
-        bodyParts: [RANGED_ATTACK],
-        maxCount: -1
-      },
-      {
         bodyParts: [ATTACK, MOVE],
         maxCount: -1
       },

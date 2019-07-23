@@ -1,4 +1,5 @@
-import { default as Tasks } from 'creep-tasks'
+import { Tasks } from 'creep-tasks/Tasks'
+import { EnergyStructure } from 'creep-tasks/utilities/helpers';
 
 export class RoleHarvester {
   public static newTask(creep: Creep, source: Source): void {

@@ -1,4 +1,4 @@
-import { default as Tasks } from 'creep-tasks'
+import { Tasks } from 'creep-tasks/Tasks'
 // import { EnergyStructure } from 'creep-tasks/utilities/helpers';
 
 export class RoleMiningSiteBuilder {

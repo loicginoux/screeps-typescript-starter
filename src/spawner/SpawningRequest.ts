@@ -5,7 +5,8 @@ type SpawnType =
   | "truck"
   | "upgrader"
   | "miningSiteBuilder"
-  | "builder";
+  | "builder"
+  | "soldier";
 // | "reparator"
 // | "fighter"
 // | "explorer"

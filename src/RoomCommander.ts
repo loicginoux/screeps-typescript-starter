@@ -1,6 +1,7 @@
 import { Spawner } from "spawner/Spawner";
 import { Architect } from "Architect";
 import { MiningMinister } from "mining/MiningMinister";
+import { RoomDefenseManager } from "defense/RoomDefenseManager";
 import { TowersManager } from "TowersManager";
 import { TickRunner } from "TickRunner";
 import { SpawningRequest } from "spawner/SpawningRequest";
@@ -14,10 +15,11 @@ export class RoomCommander extends TickRunner {
   spawner: Spawner;
   architect: Architect;
   miningMinister: MiningMinister;
+  roomDefenseManager: RoomDefenseManager;
   towersManager: TowersManager;
   roomPlanner: RoomPlanner;
-  minUpgraders = 2;
-  minBuilders = 2;
+  minUpgraders = 3;
+  minBuilders = 3;
   extensionsNeededCount: number | null;
   upgraders: Creep[] = [];
   builders: Creep[] = [];
@@ -29,11 +31,12 @@ export class RoomCommander extends TickRunner {
     this.architect = new Architect(this.room)
     this.miningMinister = new MiningMinister(this.room)
     this.towersManager = new TowersManager(this.room)
+    this.roomDefenseManager = new RoomDefenseManager(this.room)
     this.roomPlanner = new RoomPlanner(this.room)
   }
 
   employees(): any[] {
-    return [this.spawner, this.miningMinister, this.towersManager];
+    return [this.spawner, this.miningMinister, this.towersManager, this.roomDefenseManager];
   }
 
   loadData() {
@@ -50,6 +53,7 @@ export class RoomCommander extends TickRunner {
     if (!Memory.rooms[this.room.name]) {
       Memory.rooms[this.room.name] = {
         towersManager: {},
+        defenseManager: {},
         extensions: 0
       }
     }
@@ -89,6 +93,11 @@ export class RoomCommander extends TickRunner {
     if (!this.memory.ctrlRoads || u.every(1000)) {
       this.roomPlanner.buildControllerRoads()
       this.memory.ctrlRoads = true
+    }
+
+    if (this.fortressRoadsNeeded()) {
+      this.roomPlanner.buildFortressRoads()
+      this.memory.fortressRoads = true
     }
 
     if (this.roomBuildersNeeded()) {
@@ -151,8 +160,13 @@ export class RoomCommander extends TickRunner {
     return this.minUpgraders - this.upgraders.length;
   }
 
+
   roomBuildersNeeded(): boolean {
     return !!this.memory.ctrlRoads && ((this.minBuilders - this.builders.length) > 0);
+  }
+
+  fortressRoadsNeeded(): boolean | undefined {
+    return this.room.controller && this.room.controller.level >= 1 && (!this.memory.fortressRoads || u.every(10000));
   }
 
   extensionsNeeded(): number {

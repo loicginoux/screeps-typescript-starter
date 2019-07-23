@@ -4,8 +4,6 @@ import { RoleHarvester } from "roles/RoleHarvester";
 import { RoleTruck } from "roles/RoleTruck";
 import { RoleMiningSiteBuilder } from "roles/RoleMiningSiteBuilder";
 import { SpawningRequest } from "spawner/SpawningRequest";
-import { u } from "utils/Utils";
-
 
 export class MiningSite extends TickRunner {
 

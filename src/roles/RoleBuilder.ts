@@ -1,12 +1,15 @@
-import { default as Tasks } from 'creep-tasks'
+import { Tasks } from 'creep-tasks/Tasks'
 
 export class RoleBuilder {
   public static newTask(creep: Creep): void {
+    // reset creep cache
+    creep.memory.repairingId = null
     if (creep.carry.energy == 0) {
       this.getEnergy(creep)
     } else {
       let target = this.tryBuilding(creep);
       if (!target) {
+        // repair constructions or increase walls
         this.tryRepairing(creep);
       }
     }
@@ -14,7 +17,7 @@ export class RoleBuilder {
 
   public static getEnergy(creep: Creep): void {
     let containers = creep.room.find(FIND_STRUCTURES, {
-      filter: (i) => i.structureType == STRUCTURE_CONTAINER && i.store[RESOURCE_ENERGY] > 0
+      filter: (i) => (i.structureType == STRUCTURE_CONTAINER || i.structureType == STRUCTURE_STORAGE) && i.store[RESOURCE_ENERGY] > 0
     }) as StructureContainer[];
     containers = _.sortBy(containers, s => creep.pos.getRangeTo(s))
     // get from containers first
@@ -51,8 +54,11 @@ export class RoleBuilder {
   }
 
   public static tryRepairing(creep: Creep): Structure {
-    let target = this.findRepairSite(creep)
+    const targets = this.findRepairSite(creep)
+    // console.log(creep.name, "repairing", targets[0].structureType, targets[0].pos)
+    const target = targets[0]
     if (target) {
+      creep.memory.repairingId = target.id
       if (creep.pos.getRangeTo(target) > 1) {
         creep.task = Tasks.goTo(target)
       } else {
@@ -89,15 +95,20 @@ export class RoleBuilder {
     return targets[0]
   }
 
-  public static findRepairSite(creep: Creep): Structure {
-    const targets = creep.room.find(FIND_STRUCTURES, {
+  // limit wall to 5000 first, when all finished, we recursively increase wall limits if nothing else to repair
+  public static findRepairSite(creep: Creep, wallLimit = 5000): Structure[] {
+    let alreadyRepairingSites = _.map(Game.creeps, creep => creep.memory.repairingId)
+    // repair only sites if they are hit more than what the creep carry
+    let targets = creep.room.find(FIND_STRUCTURES, {
       filter: (structure) => {
         let res;
+        const needEnergy = (structure.hits < (structure.hitsMax - creep.carry.energy))
+        const alreadyAssigned = _.includes(alreadyRepairingSites, structure.id)
         if (structure.structureType == STRUCTURE_WALL) {
-          // limit wall strength to 5000
-          res = (structure.hits < structure.hitsMax && structure.hits < 5000)
+          // limit wall strength to 5000 by default
+          res = needEnergy && !alreadyAssigned && structure.hits < wallLimit
         } else {
-          res = structure.hits < structure.hitsMax
+          res = needEnergy && !alreadyAssigned
         }
         return res
       }
@@ -105,6 +116,10 @@ export class RoleBuilder {
 
     targets.sort((a, b) => a.hits - b.hits);
 
-    return targets[0]
+    if (targets.length == 0) {
+      console.log("builder has repaired all, trying walls ", wallLimit + 5000)
+      targets = this.findRepairSite(creep, wallLimit + 5000) as AnyStructure[]
+    }
+    return targets
   }
 }

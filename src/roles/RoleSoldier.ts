@@ -1,18 +1,16 @@
-import { default as Tasks } from 'creep-tasks'
+import { Tasks } from 'creep-tasks/Tasks'
 
 export class RoleSoldier {
-  public static newTask(creep: Creep): void {
-
-    if (creep.carry.energy == 0) {
-      this.getEnergy(creep);
-    } else {
-      const controller = creep.room.controller
-      if (controller) {
-        if (creep.pos.getRangeTo(controller) > 1) {
-          creep.task = Tasks.goTo(controller.pos)
-        } else {
-          creep.task = Tasks.upgrade(controller)
-        }
+  public static newTask(creep: Creep, room: Room): void {
+    let hostiles = room.find(FIND_HOSTILE_CREEPS);
+    if (hostiles.length > 0) {
+      let target = hostiles[0];
+      if (creep.hits < (creep.hitsMax / 2)) {
+        creep.task = Tasks.heal(creep)
+      } else if (creep.pos.getRangeTo(target) > 1) {
+        creep.task = Tasks.goTo(target.pos)
+      } else {
+        creep.task = Tasks.attack(target)
       }
     }
   }

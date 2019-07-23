@@ -1,5 +1,8 @@
-import { default as Tasks } from 'creep-tasks'
-// import { EnergyStructure } from 'creep-tasks/utilities/helpers';
+import { Tasks } from 'creep-tasks/Tasks'
+import { EnergyStructure } from 'creep-tasks/utilities/helpers';
+import { Spawner } from 'spawner/Spawner';
+import { u } from "utils/Utils";
+
 
 export class RoleTruck {
   public static newTask(creep: Creep, container: StructureContainer): void {
@@ -23,9 +26,19 @@ export class RoleTruck {
 
   public static gotoAndWithdraw(creep: Creep, container: StructureContainer) {
     // console.log('gotoAndWithdraw', container)
-    if (creep.pos.getRangeTo(container) > 2) {
+    // when there is a storage and container is not full enough for
+    //  use storage to take energy from
+    const storage = creep.room.storage
+    if (storage && container.store.energy < creep.carryCapacity) {
+      if (creep.pos.getRangeTo(storage) > 2) {
+        creep.task = Tasks.goTo(storage.pos)
+      } else if (storage.store.energy > creep.carryCapacity) {
+        creep.task = Tasks.withdraw(storage)
+      }
+    }
+    else if (creep.pos.getRangeTo(container) > 2) {
       creep.task = Tasks.goTo(container.pos)
-    } else {
+    } else if (container.store.energy > creep.carryCapacity) {
       creep.task = Tasks.withdraw(container)
     }
   }
@@ -51,14 +64,32 @@ export class RoleTruck {
   public static findClosestEnergyStructure(creep: Creep, container: StructureContainer): EnergyStructure {
     let structures = creep.room.find(FIND_STRUCTURES, {
       filter: (structure) => {
-        return (structure.structureType == STRUCTURE_EXTENSION ||
-          structure.structureType == STRUCTURE_SPAWN ||
-          structure.structureType == STRUCTURE_TOWER) && structure.energy < structure.energyCapacity
-        // structure.structureType == STRUCTURE_TOWER) && structure.energy < structure.energyCapacity ||
-        // structure.structureType == STRUCTURE_CONTAINER && structure.id != container.id;
+        const extensions = (structure.structureType == STRUCTURE_EXTENSION && structure.energy < structure.energyCapacity)
+        const spawns = (structure.structureType == STRUCTURE_SPAWN && structure.energy < structure.energyCapacity)
+        const towers = (structure.structureType == STRUCTURE_TOWER && structure.energy < structure.energyCapacity)
+        let storage = false;
+        if (structure.structureType == STRUCTURE_STORAGE) {
+          const currentlyStored = _.sum(_.values(structure.store))
+          storage = currentlyStored < structure.storeCapacity
+        }
+        return (extensions || spawns || towers || storage)
       }
     }) as EnergyStructure[];
-    structures = _.sortBy(structures, s => creep.pos.getRangeTo(s))
+
+    const priorities = [
+      STRUCTURE_SPAWN,
+      STRUCTURE_TOWER,
+      STRUCTURE_EXTENSION,
+      STRUCTURE_STORAGE,
+    ]
+
+    // sort by priority and then range
+    structures = structures.sort((a: any, b: any) => {
+      let res = u.compareValues(priorities.indexOf(a.structureType), priorities.indexOf(b.structureType))
+      return res === 0
+        ? u.compareValues(creep.pos.getRangeTo(a), creep.pos.getRangeTo(b))
+        : res;
+    })
     return structures[0]
   }
 }
