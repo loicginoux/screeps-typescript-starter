@@ -77,6 +77,7 @@ declare namespace NodeJS {
     empire?: any,
     pubSub?: any,
     mainRoom?: any
+    memorySize: number
   }
 }
 
