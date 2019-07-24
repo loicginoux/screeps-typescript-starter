@@ -117,8 +117,8 @@ export class RoleBuilder {
     targets.sort((a, b) => a.hits - b.hits);
 
     if (targets.length == 0) {
-      console.log("builder has repaired all, trying walls ", wallLimit + 5000)
-      targets = this.findRepairSite(creep, wallLimit + 5000) as AnyStructure[]
+      console.log("builder has repaired all, trying walls ", wallLimit + 50000)
+      targets = this.findRepairSite(creep, wallLimit + 50000) as AnyStructure[]
     }
     return targets
   }

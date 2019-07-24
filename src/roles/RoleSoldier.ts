@@ -5,13 +5,16 @@ export class RoleSoldier {
     let hostiles = room.find(FIND_HOSTILE_CREEPS);
     if (hostiles.length > 0) {
       let target = hostiles[0];
-      if (creep.hits < (creep.hitsMax / 2)) {
-        creep.task = Tasks.heal(creep)
-      } else if (creep.pos.getRangeTo(target) > 1) {
-        creep.task = Tasks.goTo(target.pos)
+      console.log("creep.pos.getRangeTo(target)", creep.pos.getRangeTo(target))
+      if (creep.pos.getRangeTo(target) > 3) {
+        console.log("travel")
+        creep.travelTo(target.pos)
       } else {
+        console.log("attack")
         creep.task = Tasks.attack(target)
       }
+    } else if (creep.hits < creep.hitsMax) {
+      creep.task = Tasks.heal(creep)
     }
   }
 }

@@ -1,5 +1,6 @@
 import { ErrorMapper } from "utils/ErrorMapper";
 import "utils/Traveler";
+import "utils/WorldPosition";
 import 'creep-tasks/prototypes'
 import { Empire } from "Empire";
 import { PubSub } from "utils/PubSub";
@@ -9,7 +10,11 @@ Memory.debug = 0
 // When compiling TS to JS and bundling with rollup, the line numbers and file names in error messages change
 // This utility uses source maps to get the line numbers and file names of the original, TS source code
 export const loop = ErrorMapper.wrapLoop(() => {
-  console.log(`Current game tick is ${Game.time}`);
+
+  global.memorySize = RawMemory.get().length;
+
+  console.log(`tick: ${Game.time} - cpu: ${Game.cpu.getUsed()} - mem: ${global.memorySize}`);
+
   // general publish subscriber used for inter module communication
   global.pubSub = new PubSub();
 

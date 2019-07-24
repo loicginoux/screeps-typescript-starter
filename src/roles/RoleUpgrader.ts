@@ -8,10 +8,8 @@ export class RoleUpgrader {
     } else {
       const controller = creep.room.controller
       if (controller) {
-        if (creep.pos.getRangeTo(controller) > 1) {
-          creep.task = Tasks.goTo(controller.pos)
-        } else {
-          creep.task = Tasks.upgrade(controller)
+        if (creep.upgradeController(controller) === ERR_NOT_IN_RANGE) {
+          creep.travelTo(controller);
         }
       }
     }

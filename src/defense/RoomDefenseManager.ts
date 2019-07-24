@@ -43,7 +43,10 @@ export class RoomDefenseManager extends TickRunner {
   }
 
   runDefenseMode(): void {
-    this.memory.defenseMode = true;
+    let hostiles = this.room.find(FIND_HOSTILE_CREEPS);
+    if (hostiles.length > 1) {
+      this.memory.defenseMode = true;
+    }
   }
 
   defendersNeeded(): boolean | undefined {

@@ -2,5 +2,5 @@
 - test soldier script
 - harvest adjacentes rooms
 - creeps die on containers
+- create links automatically one near storage, one near controller
 - installer grafana https://github.com/bonzaiferroni/bonzAI/wiki/Screepspl.us-agent-with-Compute-Engine
-- installer traveler https://github.com/bonzaiferroni/Traveler/

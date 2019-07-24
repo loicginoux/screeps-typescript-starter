@@ -19,7 +19,7 @@ export class RoomCommander extends TickRunner {
   towersManager: TowersManager;
   roomPlanner: RoomPlanner;
   minUpgraders = 3;
-  minBuilders = 3;
+  minBuilders = 2;
   extensionsNeededCount: number | null;
   upgraders: Creep[] = [];
   builders: Creep[] = [];
