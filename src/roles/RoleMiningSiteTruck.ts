@@ -4,7 +4,7 @@ import { Spawner } from 'spawner/Spawner';
 import { u } from "utils/Utils";
 
 
-export class RoleTruck {
+export class RoleMiningSiteTruck {
   public static newTask(creep: Creep, availableEnergyStructures: EnergyStructure[], neededEnergyStructures: EnergyStructure[]): void {
     // creep has no evergy, go to container 1 get some
     if (creep.carry.energy == 0) {
@@ -16,22 +16,24 @@ export class RoleTruck {
 
   public static getEnergy(creep: Creep, availableEnergyStructures: EnergyStructure[]): void {
     const priorities = [
-      STRUCTURE_STORAGE,
       STRUCTURE_CONTAINER
     ]
 
     // sort by priority and then range
     availableEnergyStructures = _.filter(availableEnergyStructures, i => _.includes(priorities, i.structureType))
     availableEnergyStructures = availableEnergyStructures.sort((a: any, b: any) => {
-      let res = u.compareValues(priorities.indexOf(a.structureType), priorities.indexOf(b.structureType))
+      // let res = u.compareValues(priorities.indexOf(a.structureType), priorities.indexOf(b.structureType))
+      // try to empty fullest containers first so harvesters can continue filling them
+      let res = -1 * u.compareValues(a.store.energy, b.store.energy)
       return res === 0
         ? u.compareValues(creep.pos.getRangeTo(a), creep.pos.getRangeTo(b))
         : res;
     })
 
+    // console.log("availableEnergyStructures", availableEnergyStructures)
     // get from containers first
     if (availableEnergyStructures.length > 0) {
-      // console.log("truck availableEnergyStructures[0]", creep.pos, availableEnergyStructures[0].structureType, availableEnergyStructures[0].pos)
+      // console.log("mining site truck availableEnergyStructures[0]", creep.pos, availableEnergyStructures[0].structureType, availableEnergyStructures[0].pos)
       if (creep.pos.getRangeTo(availableEnergyStructures[0]) > 1) {
         creep.task = Tasks.goTo(availableEnergyStructures[0])
       } else {
@@ -53,11 +55,11 @@ export class RoleTruck {
 
   public static transferEnergy(creep: Creep, neededEnergyStructures: EnergyStructure[]) {
     const priorities = [
+      STRUCTURE_STORAGE,
       STRUCTURE_TOWER,
+      STRUCTURE_EXTENSION,
       STRUCTURE_SPAWN,
       STRUCTURE_LINK,
-      STRUCTURE_EXTENSION,
-      STRUCTURE_STORAGE,
     ]
 
     // sort by priority and then range
@@ -68,9 +70,10 @@ export class RoleTruck {
         ? u.compareValues(creep.pos.getRangeTo(a), creep.pos.getRangeTo(b))
         : res;
     })
+
     // get from containers first
     if (neededEnergyStructures.length > 0) {
-      // console.log("truck neededEnergyStructures[0]", creep.pos, neededEnergyStructures[0].structureType, neededEnergyStructures[0].pos)
+      // console.log("mining site truck neededEnergyStructures[0]", creep.pos, neededEnergyStructures[0].structureType, neededEnergyStructures[0].pos)
       if (creep.pos.getRangeTo(neededEnergyStructures[0]) > 1) {
         creep.task = Tasks.goTo(neededEnergyStructures[0])
       } else {

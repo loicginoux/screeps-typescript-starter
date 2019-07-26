@@ -90,7 +90,7 @@ export class Architect {
   }
 
   buildExtensions(...args: any[]): number {
-    console.log("buildExtensions", args)
+    console.log("buildExtensions", JSON.stringify(args))
     let near = args[0].near
     let extensionCount = args[0].extensionCount
     let room = args[0].room
@@ -129,7 +129,7 @@ export class Architect {
       return emptySpots
     }
     let allFound = false
-    console.log("center", center.x, center.y)
+    // console.log("center", center.x, center.y)
     for (let range = 1; range < 20; range++) {
       if (allFound) { break }
       for (let i = range * -1; i <= range; i++) {
@@ -143,11 +143,11 @@ export class Architect {
           // https://stackoverflow.com/questions/17813807/get-the-closest-squares-in-a-grid-like-system
           // just to be sure to not pass again to same spot bettween 2 iterations of 'range'
           let spotRange = Math.abs(center.y - spot.y) + Math.abs(center.x - spot.x)
-          console.log("spot", spot.x, spot.y, center.x, center.y, "range:", spotRange)
+          // console.log("spot", spot.x, spot.y, center.x, center.y, "range:", spotRange)
           if (spotRange == range) {
             // avoid walls and structures
             let somethingAtThisSpot = room.lookAt(spot.x, spot.y)
-              .find(i => i.type === LOOK_STRUCTURES || (i.type === LOOK_TERRAIN && i.terrain === "wall"));
+              .find(i => i.type === LOOK_STRUCTURES || i.type === LOOK_CONSTRUCTION_SITES || (i.type === LOOK_TERRAIN && i.terrain === "wall"));
             if (somethingAtThisSpot) {
               continue;
             } else {

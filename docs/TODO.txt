@@ -1,6 +1,7 @@
-- use energy from storage
+- implement automatic safe mode
 - test soldier script
 - harvest adjacentes rooms
 - creeps die on containers
 - create links automatically one near storage, one near controller
+- if too much CPU use, do one pass on empire to store all structures via for find on all structures and share ref to employees or store in mem
 - installer grafana https://github.com/bonzaiferroni/bonzAI/wiki/Screepspl.us-agent-with-Compute-Engine

@@ -25,7 +25,9 @@ export class PubSub {
   }
 
   public publish(name: PubSubEventTypes, ...args: any[]) {
-    console.log(name, JSON.stringify(args))
+    if (args[0].log !== false) {
+      console.log(name, JSON.stringify(args))
+    }
     if (!this.registry[name]) return;
     _.forEach(this.registry[name], x => {
       x.apply(null, args);

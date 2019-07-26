@@ -1,11 +1,13 @@
 import { Tasks } from 'creep-tasks/Tasks'
+import { EnergyStructure } from 'creep-tasks/utilities/helpers';
+import { u } from 'utils/Utils';
 
 export class RoleBuilder {
-  public static newTask(creep: Creep): void {
+  public static newTask(creep: Creep, availableEnergyStructures: EnergyStructure[]): void {
     // reset creep cache
     creep.memory.repairingId = null
     if (creep.carry.energy == 0) {
-      this.getEnergy(creep)
+      this.getEnergy(creep, availableEnergyStructures);
     } else {
       let target = this.tryBuilding(creep);
       if (!target) {
@@ -15,17 +17,28 @@ export class RoleBuilder {
     }
   }
 
-  public static getEnergy(creep: Creep): void {
-    let containers = creep.room.find(FIND_STRUCTURES, {
-      filter: (i) => (i.structureType == STRUCTURE_CONTAINER || i.structureType == STRUCTURE_STORAGE) && i.store[RESOURCE_ENERGY] > 0
-    }) as StructureContainer[];
-    containers = _.sortBy(containers, s => creep.pos.getRangeTo(s))
+  public static getEnergy(creep: Creep, availableEnergyStructures: EnergyStructure[]): void {
+    const priorities = [
+      STRUCTURE_STORAGE,
+      STRUCTURE_CONTAINER
+    ]
+
+    // sort by priority and then range
+    availableEnergyStructures = _.filter(availableEnergyStructures, i => _.includes(priorities, i.structureType))
+    availableEnergyStructures = availableEnergyStructures.sort((a: any, b: any) => {
+      let res = u.compareValues(priorities.indexOf(a.structureType), priorities.indexOf(b.structureType))
+      return res === 0
+        ? u.compareValues(creep.pos.getRangeTo(a), creep.pos.getRangeTo(b))
+        : res;
+    })
+
     // get from containers first
-    if (containers.length > 0) {
-      if (creep.pos.getRangeTo(containers[0]) > 1) {
-        creep.task = Tasks.goTo(containers[0])
+    if (availableEnergyStructures.length > 0) {
+      // console.log("builder availableEnergyStructures[0]", creep.pos, availableEnergyStructures[0].structureType, availableEnergyStructures[0].pos)
+      if (creep.pos.getRangeTo(availableEnergyStructures[0]) > 1) {
+        creep.task = Tasks.goTo(availableEnergyStructures[0])
       } else {
-        creep.task = Tasks.withdraw(containers[0])
+        creep.task = Tasks.withdraw(availableEnergyStructures[0])
       }
     } else {
       // else get from source directly
@@ -90,7 +103,10 @@ export class RoleBuilder {
       STRUCTURE_PORTAL,
     ]
     if (targets) {
-      targets = _.sortBy(targets, i => { priorities.indexOf(i.structureType) })
+      targets = targets.sort((a: any, b: any) => {
+        let res = u.compareValues(priorities.indexOf(a.structureType), priorities.indexOf(b.structureType))
+        return res;
+      })
     }
     return targets[0]
   }
@@ -101,23 +117,20 @@ export class RoleBuilder {
     // repair only sites if they are hit more than what the creep carry
     let targets = creep.room.find(FIND_STRUCTURES, {
       filter: (structure) => {
-        let res;
+        let res = true;
         const needEnergy = (structure.hits < (structure.hitsMax - creep.carry.energy))
         const alreadyAssigned = _.includes(alreadyRepairingSites, structure.id)
-        if (structure.structureType == STRUCTURE_WALL) {
-          // limit wall strength to 5000 by default
-          res = needEnergy && !alreadyAssigned && structure.hits < wallLimit
-        } else {
-          res = needEnergy && !alreadyAssigned
+        if (structure.structureType == STRUCTURE_RAMPART || structure.structureType == STRUCTURE_WALL) {
+          res = structure.hits < wallLimit
         }
-        return res
+        return res && needEnergy && !alreadyAssigned
       }
     });
 
     targets.sort((a, b) => a.hits - b.hits);
 
     if (targets.length == 0) {
-      console.log("builder has repaired all, trying walls ", wallLimit + 50000)
+      // console.log("builder has repaired all, trying walls ", wallLimit + 50000)
       targets = this.findRepairSite(creep, wallLimit + 50000) as AnyStructure[]
     }
     return targets

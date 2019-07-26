@@ -3,12 +3,15 @@ import { Architect } from "Architect";
 import { MiningMinister } from "mining/MiningMinister";
 import { RoomDefenseManager } from "defense/RoomDefenseManager";
 import { TowersManager } from "TowersManager";
+import { EnergyManager } from "EnergyManager";
 import { TickRunner } from "TickRunner";
 import { SpawningRequest } from "spawner/SpawningRequest";
 import { RoleUpgrader } from "roles/RoleUpgrader";
 import { RoleBuilder } from "roles/RoleBuilder";
+import { RoleTruck } from "roles/RoleTruck";
 import { RoomPlanner } from "room_planning/RoomPlanner";
 import { u } from 'utils/Utils';
+import { EnergyStructure } from "creep-tasks/utilities/helpers";
 
 
 export class RoomCommander extends TickRunner {
@@ -17,13 +20,18 @@ export class RoomCommander extends TickRunner {
   miningMinister: MiningMinister;
   roomDefenseManager: RoomDefenseManager;
   towersManager: TowersManager;
+  energyManager: EnergyManager;
   roomPlanner: RoomPlanner;
-  minUpgraders = 3;
+  minUpgraders = 5;
   minBuilders = 2;
+  minTrucks = 2;
   extensionsNeededCount: number | null;
   upgraders: Creep[] = [];
   builders: Creep[] = [];
+  trucks: Creep[] = [];
   memory: RoomMemory;
+  availableEnergySources: EnergyStructure[];
+  neededEnergySources: EnergyStructure[];
 
   constructor(private room: Room) {
     super()
@@ -31,12 +39,15 @@ export class RoomCommander extends TickRunner {
     this.architect = new Architect(this.room)
     this.miningMinister = new MiningMinister(this.room)
     this.towersManager = new TowersManager(this.room)
+    this.energyManager = new EnergyManager(this.room)
     this.roomDefenseManager = new RoomDefenseManager(this.room)
     this.roomPlanner = new RoomPlanner(this.room)
+    global.pubSub.subscribe('ENERGY_AVAILABLE', this.storeAvailabelEnergySources.bind(this))
+    global.pubSub.subscribe('ENERGY_NEEDED', this.storeNeededEnergySources.bind(this))
   }
 
   employees(): any[] {
-    return [this.spawner, this.miningMinister, this.towersManager, this.roomDefenseManager];
+    return [this.spawner, this.miningMinister, this.towersManager, this.roomDefenseManager, this.energyManager];
   }
 
   loadData() {
@@ -54,6 +65,7 @@ export class RoomCommander extends TickRunner {
       Memory.rooms[this.room.name] = {
         towersManager: {},
         defenseManager: {},
+        energyManager: {},
         extensions: 0
       }
     }
@@ -75,6 +87,9 @@ export class RoomCommander extends TickRunner {
           this.builders.push(creep)
           buildersid.push(creep.id)
         }
+        if (creep.name.includes('truck')) {
+          this.trucks.push(creep);
+        }
       }
     })
   }
@@ -83,9 +98,24 @@ export class RoomCommander extends TickRunner {
     if (this.upgradersNeeded() > 0) {
       global.pubSub.publish('SPAWN_REQUEST', {
         role: 'upgrader',
+        memory: {
+          room: this.room.name
+        },
         priority: Game.gcl.level,
         room: this.room
       } as SpawningRequest)
+    }
+
+    if (this.trucksNeeded() > 0) {
+      global.pubSub.publish('SPAWN_REQUEST', {
+        role: 'truck',
+        memory: {
+          room: this.room.name
+        },
+        priority: 2
+      } as SpawningRequest)
+      // return OK, no need for trucks driver for harvester to start working
+      // this.preCheckResult = ERR_NOT_ENOUGH_RESOURCES
     }
 
     // build roads to controller
@@ -103,6 +133,9 @@ export class RoomCommander extends TickRunner {
     if (this.roomBuildersNeeded()) {
       global.pubSub.publish('SPAWN_REQUEST', {
         role: 'builder',
+        memory: {
+          room: this.room.name
+        },
         priority: 1,
         room: this.room
       } as SpawningRequest)
@@ -120,20 +153,6 @@ export class RoomCommander extends TickRunner {
         })
       }
     }
-
-    if (this.storageNeeded()) {
-      let firstSpawner = this.room.find(FIND_MY_STRUCTURES, {
-        filter: i => i.structureType === STRUCTURE_SPAWN
-      }) as StructureSpawn[];
-      if (firstSpawner[0]) {
-        global.pubSub.publish('BUILD_STORAGE', {
-          near: firstSpawner[0].pos,
-          room: this.room,
-        })
-      }
-    }
-
-
     super.preCheck()
     return OK;
   }
@@ -141,14 +160,21 @@ export class RoomCommander extends TickRunner {
   act() {
     _.forEach(this.upgraders, creep => {
       if (creep.isIdle) {
-        RoleUpgrader.newTask(creep);
+        RoleUpgrader.newTask(creep, this.availableEnergySources);
+      }
+      creep.run()
+    })
+
+    _.forEach(this.trucks, creep => {
+      if (creep.isIdle) {
+        RoleTruck.newTask(creep, this.availableEnergySources, this.neededEnergySources);
       }
       creep.run()
     })
 
     _.forEach(this.builders, creep => {
       if (creep.isIdle) {
-        RoleBuilder.newTask(creep);
+        RoleBuilder.newTask(creep, this.availableEnergySources);
       }
       creep.run()
     })
@@ -156,10 +182,12 @@ export class RoomCommander extends TickRunner {
     super.act()
   }
 
-  upgradersNeeded(): number {
-    return this.minUpgraders - this.upgraders.length;
-  }
+  storeAvailabelEnergySources(...args: any[]) { this.availableEnergySources = args[0].structures; }
+  storeNeededEnergySources(...args: any[]) { this.neededEnergySources = args[0].structures; }
 
+  upgradersNeeded(): number { return this.minUpgraders - this.upgraders.length; }
+
+  trucksNeeded(): number { return this.minTrucks - this.trucks.length; }
 
   roomBuildersNeeded(): boolean {
     return !!this.memory.ctrlRoads && ((this.minBuilders - this.builders.length) > 0);
@@ -173,31 +201,16 @@ export class RoomCommander extends TickRunner {
     if (this.extensionsNeededCount) {
       return this.extensionsNeededCount
     }
+    let extensions = this.room.find(FIND_STRUCTURES, { filter: (i) => i.structureType == STRUCTURE_EXTENSION }) as StructureExtension[];
     this.extensionsNeededCount = 0
     let extensionsAtLevel = 0
-    if (!this.memory.extensions) {
-      this.memory.extensions = 0
-    }
     let extensions_per_level = [0, 0, 5, 10, 20, 30, 40, 50, 60]
     if (this.room.controller) {
       extensionsAtLevel = extensions_per_level[this.room.controller.level]
-      this.extensionsNeededCount = extensionsAtLevel - this.memory.extensions
-      // cache extension currently building so it triggers event only once
-      this.memory.extensions = extensionsAtLevel;
+      this.extensionsNeededCount = extensionsAtLevel - extensions.length
     }
     return this.extensionsNeededCount;
   }
 
-  storageNeeded(): boolean {
-    let needed = false;
-    if (!this.memory.storage) {
-      this.memory.storage = false
-    }
-    if (this.room.controller && this.room.controller.level >= 4 && !this.memory.storage) {
-      needed = true
-      // cache extension currently building so it triggers event only once
-      this.memory.storage = true;
-    }
-    return needed;
-  }
+
 }

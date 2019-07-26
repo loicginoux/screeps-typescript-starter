@@ -1,35 +1,42 @@
 import { TickRunner } from "TickRunner";
 import { RoleStaticHarvester } from "roles/RoleStaticHarvester";
 import { RoleHarvester } from "roles/RoleHarvester";
-import { RoleTruck } from "roles/RoleTruck";
+import { RoleMiningSiteTruck } from "roles/RoleMiningSiteTruck";
 import { RoleMiningSiteBuilder } from "roles/RoleMiningSiteBuilder";
 import { SpawningRequest } from "spawner/SpawningRequest";
+import { EnergyStructure } from "creep-tasks/utilities/helpers";
+import { u } from 'utils/Utils';
 
 export class MiningSite extends TickRunner {
 
   harvesters: Creep[] = [];
   trucks: Creep[] = [];
   builders: Creep[] = [];
-  container?: StructureContainer | null;
-  buildingContainer?: ConstructionSite | null;
-  container2?: StructureContainer | null;
-  buildingContainer2?: ConstructionSite | null;
+  containers: StructureContainer[];
+  buildingContainers: ConstructionSite[];
   minHarvesters = 1;
-  minTrucks = 1;
   minBuilders = 1;
   memory: MiningSiteMemory;
+  minTrucks = 1;
+  availableEnergySources: EnergyStructure[];
+  neededEnergySources: EnergyStructure[];
 
 
   constructor(public source: Source) {
     super()
+    global.pubSub.subscribe('ENERGY_AVAILABLE', this.storeAvailabelEnergySources.bind(this))
+    global.pubSub.subscribe('ENERGY_NEEDED', this.storeNeededEnergySources.bind(this))
   }
+
+  storeAvailabelEnergySources(...args: any[]) { this.availableEnergySources = args[0].structures; }
+  storeNeededEnergySources(...args: any[]) { this.neededEnergySources = args[0].structures; }
 
   loadData() {
     this.initMemory()
     if (this.memory) {
       this.loadCreepsFromMemory()
-      this.loadContainerFromMemory()
     }
+    this.loadContainers()
   }
 
   initMemory() {
@@ -49,7 +56,7 @@ export class MiningSite extends TickRunner {
           this.harvesters.push(creep)
           harvestersid.push(creep.id)
         }
-        if (creep.name.includes('truck') && !trucksid.includes(creep.id)) {
+        if (creep.name.includes('miningSiteTruck') && !trucksid.includes(creep.id)) {
           this.trucks.push(creep)
           trucksid.push(creep.id)
         }
@@ -68,7 +75,9 @@ export class MiningSite extends TickRunner {
     if (this.harvestersNeeded() > 0) {
       global.pubSub.publish('SPAWN_REQUEST', {
         role: 'harvester',
-        miningSite: this,
+        memory: {
+          miningSourceId: this.source.id,
+        },
         room: this.source.room,
         priority: 2
       } as SpawningRequest)
@@ -76,29 +85,19 @@ export class MiningSite extends TickRunner {
 
     if (this.trucksNeeded() > 0) {
       global.pubSub.publish('SPAWN_REQUEST', {
-        role: 'truck',
+        role: 'miningSiteTruck',
+        memory: {
+          miningSourceId: this.source.id,
+        },
         room: this.source.room,
-        miningSite: this,
         priority: 2
       } as SpawningRequest)
       // return OK, no need for trucks driver for harvester to start working
       // this.preCheckResult = ERR_NOT_ENOUGH_RESOURCES
     }
-    if (this.builderNeeded() > 0) {
-      global.pubSub.publish('SPAWN_REQUEST', {
-        role: 'miningSiteBuilder',
-        miningSite: this,
-        room: this.source.room,
-        priority: 1
-      } as SpawningRequest)
-    }
 
     if (this.containerNeeded()) {
       global.pubSub.publish('BUILD_CONTAINER_NEEDED', { miningSite: this, memoryKey: 'nextContainerPos' })
-      // container are not mandarory, return OK
-    }
-    if (this.container2Needed()) {
-      // global.pubSub.publish('BUILD_CONTAINER_NEEDED', { miningSite: this, memoryKey: 'nextContainerPos2' })
       // container are not mandarory, return OK
     }
 
@@ -113,23 +112,12 @@ export class MiningSite extends TickRunner {
 
   trucksNeeded(): number { return this.minTrucks - this.trucks.length; }
 
-  builderNeeded(): number {
-    if (!this.container && this.source.room.controller && this.source.room.controller.level > 1) {
-      return this.minBuilders - this.builders.length;
-    }
-    return 0
-  }
-
   // roadsNeeded(): boolean {
   //   return !!this.source.room.controller && this.source.room.controller.level > 1 && !this.memory.roads
   // }
 
   containerNeeded(): boolean {
-    return !this.container && !this.memory.buildingContainer;
-  }
-
-  container2Needed(): boolean {
-    return !this.container2 && !this.memory.buildingContainer2 && (!this.source.room.controller || this.source.room.controller.level > 2);
+    return this.containers.length < 1;
   }
 
   avoid() {
@@ -141,10 +129,10 @@ export class MiningSite extends TickRunner {
   act(): void {
     _.forEach(this.harvesters, creep => {
       if (creep.isIdle) {
-        if (this.container) {
+        if (this.containers.length) {
           // when container are done, creep harvest
-          RoleStaticHarvester.newTask(creep, this.source, this.container);
-        } else if (!this.container && this.buildingContainer) {
+          RoleStaticHarvester.newTask(creep, this.source, this.containers[0]);
+        } else if (this.containers.length == 0 && this.buildingContainers) {
           // when container are not built yet, creep is building
           RoleMiningSiteBuilder.newTask(creep, this.source);
         } else {
@@ -156,22 +144,10 @@ export class MiningSite extends TickRunner {
 
     _.forEach(this.trucks, creep => {
       if (creep.isIdle) {
-        if (this.container) {
-          RoleTruck.newTask(creep, this.container);
+        if (this.containers.length) {
+          RoleMiningSiteTruck.newTask(creep, this.availableEnergySources, this.neededEnergySources);
         } else {
           RoleHarvester.newTask(creep, this.source);
-        }
-      }
-      creep.run()
-    })
-
-    _.forEach(this.builders, creep => {
-      if (creep.isIdle) {
-        // this.cleanBuildingContainersMemory()
-        if (this.memory.buildingContainer && !this.container) {
-          RoleMiningSiteBuilder.newTask(creep, this.source);
-        } else if (this.container) {
-          RoleStaticHarvester.newTask(creep, this.source, this.container);
         }
       }
       creep.run()
@@ -182,56 +158,24 @@ export class MiningSite extends TickRunner {
     return _.sum(container.store) == container.storeCapacity
   }
 
-  loadContainerFromMemory(): void {
+  getEmptyContainer(): StructureContainer {
+    return this.containers.sort((a: StructureContainer, b: StructureContainer) => {
+      return u.compareValues(a.store.energy, b.store.energy);
+    })[0]
+  }
+
+  // in range of 3 sorted by empty first
+  loadContainers(): void {
     // load containers or delete them
-    if (this.memory.container) {
-      this.container = Game.getObjectById(this.memory.container);
-      if (!this.container) { delete (this.memory.container) }
-    }
-    if (this.memory.container2) {
-      this.container = Game.getObjectById(this.memory.container);
-      if (!this.container) { delete (this.memory.container) }
-    }
-    // load building containers,  or delete them
-    // if just finished building, add new container to memory
-    if (this.memory.buildingContainer) {
-      this.buildingContainer = Game.getObjectById(this.memory.buildingContainer);
-      if (!this.buildingContainer) {
-        delete (this.memory.buildingContainer)
-        // building container finished, keep built container in memory
-        let containers = this.source.room.find(FIND_STRUCTURES, {
-          filter: (i) => i.structureType == STRUCTURE_CONTAINER && i.pos.x == this.memory.nextContainerPos!.x && i.pos.y == this.memory.nextContainerPos!.y
-        }) as StructureContainer[];
-        if (containers.length > 0) {
-          this.memory.container = containers[0].id
-        }
-      }
-    }
-    if (this.memory.buildingContainer2) {
-      this.buildingContainer2 = Game.getObjectById(this.memory.buildingContainer2);
-      if (!this.buildingContainer2) {
-        delete (this.memory.buildingContainer2)
-        // building container finished, keep built container in memory
-        let containers = this.source.room.find(FIND_STRUCTURES, {
-          filter: (i) => i.structureType == STRUCTURE_CONTAINER && i.pos.x == this.memory.nextContainerPos2!.x && i.pos.y == this.memory.nextContainerPos2!.y
-        }) as StructureContainer[];
-        if (containers.length > 0) {
-          this.memory.container2 = containers[0].id
-        }
-      }
-    }
-    // add building container to memory when architect just created it on last tick
-    if (this.memory.nextContainerPos && !this.memory.container) {
-      const constructionSites = this.source.room.lookForAt(LOOK_CONSTRUCTION_SITES, this.memory.nextContainerPos.x, this.memory.nextContainerPos.y);
-      if (constructionSites.length > 0) {
-        this.memory.buildingContainer = constructionSites[0].id
-      }
-    }
-    if (this.memory.nextContainerPos2 && !this.memory.container2) {
-      const constructionSites = this.source.room.lookForAt(LOOK_CONSTRUCTION_SITES, this.memory.nextContainerPos2.x, this.memory.nextContainerPos2.y);
-      if (constructionSites.length > 0) {
-        this.memory.buildingContainer2 = constructionSites[0].id
-      }
-    }
+    this.containers = this.source.pos.findInRange(FIND_STRUCTURES, 3, {
+      filter: i => i.structureType === STRUCTURE_CONTAINER
+    }).sort((a: any, b: any) => {
+      return u.compareValues(a.store.energy, b.store.energy);
+    }) as StructureContainer[];
+
+    // console.log("this.containers", this.containers[0].pos, this.containers[1].pos)
+    this.buildingContainers = this.source.pos.findInRange(FIND_CONSTRUCTION_SITES, 3, {
+      filter: i => i.structureType === STRUCTURE_CONTAINER
+    })
   }
 }

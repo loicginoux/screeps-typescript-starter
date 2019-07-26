@@ -1,5 +1,6 @@
 import { TickRunner } from "TickRunner";
 import { RoomCommander } from "RoomCommander";
+import { SafeModeActivator } from "utils/SafeModeActivator";
 
 export class Empire extends TickRunner {
   roomCommanders!: RoomCommander[];
@@ -15,5 +16,10 @@ export class Empire extends TickRunner {
     });
     // do not forget
     super.loadData();
+  }
+
+  act() {
+    SafeModeActivator.activeSafeModeIfNecessary()
+    super.act()
   }
 }

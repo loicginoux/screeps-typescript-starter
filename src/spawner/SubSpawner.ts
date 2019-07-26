@@ -59,8 +59,9 @@ export class SubSpawner {
   }
 
   spawningOptions(): Object {
-    return {}
+    return { memory: this.spawningRequest.memory }
   }
+
 
   calculateBodyCost(bodyParts: BodyPartConstant[]): number {
     let cost = 0

@@ -55,19 +55,28 @@ interface Memory {
   }
 }
 
+
 interface RoomMemory {
   avoid?: boolean;
-  extensions?: number
-  storage?: boolean
   towersManager: TowerManagerMemory
+  energyManager: EnergyManagerMemory
   defenseManager: RoomDefenseManagerMemory
   ctrlRoads?: boolean,
   fortressRoads?: boolean,
-  [object: string]: string[] | string | boolean | number | undefined | TowerManagerMemory | RoomDefenseManagerMemory
+  [object: string]: any
 }
 
 interface RoomDefenseManagerMemory {
   defenseMode?: boolean
+}
+
+interface EnergyManagerMemory {
+  links?: LinkMemory[];
+}
+
+interface LinkMemory {
+  id: string;
+  type: "from" | "fromto" | "to";
 }
 
 // `global` extension samples

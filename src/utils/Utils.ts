@@ -1,3 +1,5 @@
+import { StoreStructure } from "creep-tasks/utilities/helpers";
+
 class Utils {
   static log(...args: any[]): void {
     if (Memory.debug > 0) {
@@ -16,6 +18,7 @@ class Utils {
     return Game.time % freq === 0
   }
 
+  // ascending order
   static compareValues(v1: number, v2: number): number {
     return (v1 > v2)
       ? 1
@@ -43,6 +46,12 @@ class Utils {
     Memory.flags = {};
     Memory.spawns = {};
   }
+
+  static isStoreFull(structure: StoreStructure) {
+    const currentlyStored = _.sum(_.values(structure.store))
+    return currentlyStored == structure.storeCapacity
+  }
+
 }
 
 export const u = Utils;

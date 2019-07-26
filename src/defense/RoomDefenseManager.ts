@@ -33,6 +33,9 @@ export class RoomDefenseManager extends TickRunner {
     if (this.defendersNeeded()) {
       global.pubSub.publish('SPAWN_REQUEST', {
         role: 'soldier',
+        memory: {
+          room: this.room.name,
+        },
         room: this.room,
         priority: 50
       } as SpawningRequest)

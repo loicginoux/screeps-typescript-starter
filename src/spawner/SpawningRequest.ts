@@ -2,6 +2,7 @@ import { MiningSite } from "mining/MiningSite";
 
 type SpawnType =
   | "harvester"
+  | "miningSiteTruck"
   | "truck"
   | "upgrader"
   | "miningSiteBuilder"
@@ -23,7 +24,10 @@ type SpawnType =
 export interface SpawningRequest {
   role: SpawnType,
   room: Room,
-  miningSite?: MiningSite
+  memory: {
+    room?: string,
+    miningSite?: MiningSite
+  }
   priority: number,
   spawner?: StructureSpawn
 }
