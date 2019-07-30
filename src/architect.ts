@@ -7,6 +7,7 @@ export class Architect {
     global.pubSub.subscribe('TOWER_REQUEST', this.buildTower.bind(this))
     global.pubSub.subscribe('BUILD_EXTENSION', this.buildExtensions.bind(this))
     global.pubSub.subscribe('BUILD_STORAGE', this.buildStorage.bind(this))
+    global.pubSub.subscribe('BUILD_LINK', this.buildLink.bind(this))
   }
 
   buildContainer(...args: any[]): number {
@@ -61,6 +62,9 @@ export class Architect {
     // remove last step to not build road on arrival
     pathSteps.pop();
 
+    // let points = pathSteps.map(ps => new RoomPosition(ps.x, ps.y, "W11N11"))
+    // new RoomVisual('W11N11').poly(points);
+
     _.forEach(pathSteps, (step) => {
       this.room.createConstructionSite(step.x, step.y, STRUCTURE_ROAD)
     })
@@ -90,14 +94,14 @@ export class Architect {
   }
 
   buildExtensions(...args: any[]): number {
-    console.log("buildExtensions", JSON.stringify(args))
+    // console.log("buildExtensions", JSON.stringify(args))
     let near = args[0].near
     let extensionCount = args[0].extensionCount
     let room = args[0].room
     let res = -1
     if (extensionCount > 0 && room && near) {
       let spotsFound = this.findEmptySpotsNear(room, near, extensionCount)
-      console.log("spotsFound", JSON.stringify(spotsFound))
+      // console.log("spotsFound", JSON.stringify(spotsFound))
       spotsFound.forEach((spot: Position) => {
         room.createConstructionSite(spot.x, spot.y, STRUCTURE_EXTENSION)
       });
@@ -108,11 +112,11 @@ export class Architect {
   buildStorage(...args: any[]): number {
     let near = args[0].near
     let room = args[0].room
-    console.log("buildStorage", near, room)
+    // console.log("buildStorage", near, room)
     let res = -1
     if (room && near) {
       let spotsFound = this.findEmptySpotsNear(room, near, 1)
-      console.log("spotsFound", JSON.stringify(spotsFound))
+      // console.log("spotsFound", JSON.stringify(spotsFound))
       spotsFound.forEach((spot: Position) => {
         room.createConstructionSite(spot.x, spot.y, STRUCTURE_STORAGE)
       });
@@ -120,6 +124,20 @@ export class Architect {
     return res;
   }
 
+  buildLink(...args: any[]): number {
+    let near = args[0].near
+    let room = args[0].room
+    // console.log("buildStorage", near, room)
+    let res = -1
+    if (room && near) {
+      let spotsFound = this.findEmptySpotsNear(room, near, 1)
+      // console.log("spotsFound", JSON.stringify(spotsFound))
+      spotsFound.forEach((spot: Position) => {
+        room.createConstructionSite(spot.x, spot.y, STRUCTURE_LINK)
+      });
+    }
+    return res;
+  }
   //
   // JSON.stringify(mainRoom.architect.findEmptySpotsNear(mainRoom.room, Game.spawns.Spawn1.pos, 3))
   findEmptySpotsNear(room: Room, near: Position, spotsNumber = 0): Position[] {
@@ -156,6 +174,7 @@ export class Architect {
               allFound = (emptySpots.length == spotsNumber)
             }
           }
+
         }
       }
     }

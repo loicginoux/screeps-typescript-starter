@@ -87,10 +87,7 @@ class WorldPosition {
   }
 
   /** @returns boolean - do we have visibility in the room this point belongs to? */
-  isVisible() {
-    let name = this.getRoomName();
-    return (Game.rooms[name] !== undefined);
-  }
+
 
   /** @returns boolean - is this room part of the highways between sectors? */
   isHighway() {
@@ -100,10 +97,6 @@ class WorldPosition {
   }
 
   /** @returns boolean - do I own this point in space? */
-  isMine() {
-    let roomName = this.getRoomName();
-    return _.get(Game.rooms, roomName + '.controller.my', false);
-  }
 
   /** Distance functions */
 

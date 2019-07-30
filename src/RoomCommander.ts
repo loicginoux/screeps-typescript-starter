@@ -22,7 +22,7 @@ export class RoomCommander extends TickRunner {
   towersManager: TowersManager;
   energyManager: EnergyManager;
   roomPlanner: RoomPlanner;
-  minUpgraders = 5;
+  minUpgraders = 3;
   minBuilders = 2;
   minTrucks = 2;
   extensionsNeededCount: number | null;
@@ -101,7 +101,7 @@ export class RoomCommander extends TickRunner {
         memory: {
           room: this.room.name
         },
-        priority: Game.gcl.level,
+        priority: (this.room.controller ? this.room.controller.level : 1),
         room: this.room
       } as SpawningRequest)
     }
@@ -125,9 +125,14 @@ export class RoomCommander extends TickRunner {
       this.memory.ctrlRoads = true
     }
 
+    if ((!this.memory.sourceRoads || u.every(1000)) && this.room.controller && this.room.controller.level >= 3) {
+      this.roomPlanner.buildSourceRoads()
+      this.memory.sourceRoads = true
+    }
+
     if (this.fortressRoadsNeeded()) {
       this.roomPlanner.buildFortressRoads()
-      this.memory.fortressRoads = true
+      this.memory.fortressRoadsLevel = this.room.controller!.level
     }
 
     if (this.roomBuildersNeeded()) {
@@ -182,6 +187,11 @@ export class RoomCommander extends TickRunner {
     super.act()
   }
 
+  finalize() {
+    u.displayVisualRoles(this.room);
+    super.finalize()
+  }
+
   storeAvailabelEnergySources(...args: any[]) { this.availableEnergySources = args[0].structures; }
   storeNeededEnergySources(...args: any[]) { this.neededEnergySources = args[0].structures; }
 
@@ -194,7 +204,8 @@ export class RoomCommander extends TickRunner {
   }
 
   fortressRoadsNeeded(): boolean | undefined {
-    return this.room.controller && this.room.controller.level >= 1 && (!this.memory.fortressRoads || u.every(10000));
+    // return false;
+    return this.room.controller && (!this.memory.fortressRoadsLevel || this.room.controller.level > this.memory.fortressRoadsLevel || u.every(10000));
   }
 
   extensionsNeeded(): number {

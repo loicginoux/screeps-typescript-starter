@@ -7,10 +7,10 @@ type SpawnType =
   | "upgrader"
   | "miningSiteBuilder"
   | "builder"
-  | "soldier";
+  | "soldier"
+  | "explorer";
 // | "reparator"
 // | "fighter"
-// | "explorer"
 // | "long-distance-harvester"
 // | "pickaboo"
 // | "healer"

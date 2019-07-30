@@ -8,9 +8,14 @@ export class RoleMiningSiteTruck {
   public static newTask(creep: Creep, availableEnergyStructures: EnergyStructure[], neededEnergyStructures: EnergyStructure[]): void {
     // creep has no evergy, go to container 1 get some
     if (creep.carry.energy == 0) {
-      this.getEnergy(creep, availableEnergyStructures);
+      u.whileCheckForDroppedEnergy(creep, () => {
+        this.getEnergy(creep, availableEnergyStructures);
+      })
     } else {
-      this.transferEnergy(creep, neededEnergyStructures)
+      let structure = this.transferEnergy(creep, neededEnergyStructures)
+      if (!structure) {
+        let target = u.tryBuilding(creep);
+      }
     }
   }
 
@@ -22,20 +27,31 @@ export class RoleMiningSiteTruck {
     // sort by priority and then range
     availableEnergyStructures = _.filter(availableEnergyStructures, i => _.includes(priorities, i.structureType))
     availableEnergyStructures = availableEnergyStructures.sort((a: any, b: any) => {
-      // let res = u.compareValues(priorities.indexOf(a.structureType), priorities.indexOf(b.structureType))
-      // try to empty fullest containers first so harvesters can continue filling them
-      let res = -1 * u.compareValues(a.store.energy, b.store.energy)
-      return res === 0
-        ? u.compareValues(creep.pos.getRangeTo(a), creep.pos.getRangeTo(b))
-        : res;
+      let res = u.compareValues(priorities.indexOf(a.structureType), priorities.indexOf(b.structureType))
+      if (res === 0) {
+        let aFullEnough = 1
+        if (a.store.energy >= creep.carryCapacity) {
+          aFullEnough = 0
+        }
+        let bFullEnough = 1
+        if (b.store.energy >= creep.carryCapacity) {
+          bFullEnough = 0
+        }
+        res = u.compareValues(aFullEnough, bFullEnough)
+        if (res === 0) {
+          res = u.compareValues(creep.pos.getRangeTo(a), creep.pos.getRangeTo(b))
+        }
+      }
+      return res;
     })
 
-    // console.log("availableEnergyStructures", availableEnergyStructures)
+
     // get from containers first
     if (availableEnergyStructures.length > 0) {
       // console.log("mining site truck availableEnergyStructures[0]", creep.pos, availableEnergyStructures[0].structureType, availableEnergyStructures[0].pos)
       if (creep.pos.getRangeTo(availableEnergyStructures[0]) > 1) {
-        creep.task = Tasks.goTo(availableEnergyStructures[0])
+        // creep.task = Tasks.goTo(availableEnergyStructures[0])
+        creep.travelTo(availableEnergyStructures[0])
       } else {
         creep.task = Tasks.withdraw(availableEnergyStructures[0])
       }
@@ -45,7 +61,8 @@ export class RoleMiningSiteTruck {
       sources = _.sortBy(sources, s => creep.pos.getRangeTo(s))
       if (sources.length > 0) {
         if (creep.pos.getRangeTo(sources[0]) > 1) {
-          creep.task = Tasks.goTo(sources[0])
+          // creep.task = Tasks.goTo(sources[0])
+          creep.travelTo(sources[0])
         } else {
           creep.task = Tasks.harvest(sources[0])
         }
@@ -75,10 +92,12 @@ export class RoleMiningSiteTruck {
     if (neededEnergyStructures.length > 0) {
       // console.log("mining site truck neededEnergyStructures[0]", creep.pos, neededEnergyStructures[0].structureType, neededEnergyStructures[0].pos)
       if (creep.pos.getRangeTo(neededEnergyStructures[0]) > 1) {
-        creep.task = Tasks.goTo(neededEnergyStructures[0])
+        // creep.task = Tasks.goTo(neededEnergyStructures[0])
+        creep.travelTo(neededEnergyStructures[0])
       } else {
         creep.task = Tasks.transfer(neededEnergyStructures[0])
       }
     }
+    return neededEnergyStructures[0]
   }
 }

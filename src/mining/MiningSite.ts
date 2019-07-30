@@ -173,9 +173,9 @@ export class MiningSite extends TickRunner {
       return u.compareValues(a.store.energy, b.store.energy);
     }) as StructureContainer[];
 
-    // console.log("this.containers", this.containers[0].pos, this.containers[1].pos)
     this.buildingContainers = this.source.pos.findInRange(FIND_CONSTRUCTION_SITES, 3, {
       filter: i => i.structureType === STRUCTURE_CONTAINER
     })
+    // console.log("this.containers", this.containers.length, this.buildingContainers.length)
   }
 }

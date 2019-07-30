@@ -7,9 +7,11 @@ export class RoleBuilder {
     // reset creep cache
     creep.memory.repairingId = null
     if (creep.carry.energy == 0) {
-      this.getEnergy(creep, availableEnergyStructures);
+      u.whileCheckForDroppedEnergy(creep, () => {
+        this.getEnergy(creep, availableEnergyStructures);
+      })
     } else {
-      let target = this.tryBuilding(creep);
+      let target = u.tryBuilding(creep);
       if (!target) {
         // repair constructions or increase walls
         this.tryRepairing(creep);
@@ -54,18 +56,6 @@ export class RoleBuilder {
     }
   }
 
-  public static tryBuilding(creep: Creep): ConstructionSite {
-    let target = this.findConstructionSite(creep)
-    if (target) {
-      if (creep.pos.getRangeTo(target) > 1) {
-        creep.task = Tasks.goTo(target)
-      } else {
-        creep.task = Tasks.build(target)
-      }
-    }
-    return target
-  }
-
   public static tryRepairing(creep: Creep): Structure {
     const targets = this.findRepairSite(creep)
     // console.log(creep.name, "repairing", targets[0].structureType, targets[0].pos)
@@ -79,36 +69,6 @@ export class RoleBuilder {
       }
     }
     return target
-  }
-
-  public static findConstructionSite(creep: Creep): ConstructionSite {
-    let targets = creep.room.find(FIND_CONSTRUCTION_SITES) as ConstructionSite[]
-    const priorities = [
-      STRUCTURE_SPAWN,
-      STRUCTURE_TOWER,
-      STRUCTURE_EXTENSION,
-      STRUCTURE_ROAD,
-      STRUCTURE_CONTAINER,
-      STRUCTURE_RAMPART,
-      STRUCTURE_WALL,
-      STRUCTURE_LINK,
-      STRUCTURE_STORAGE,
-      STRUCTURE_OBSERVER,
-      STRUCTURE_POWER_BANK,
-      STRUCTURE_POWER_SPAWN,
-      STRUCTURE_EXTRACTOR,
-      STRUCTURE_LAB,
-      STRUCTURE_TERMINAL,
-      STRUCTURE_NUKER,
-      STRUCTURE_PORTAL,
-    ]
-    if (targets) {
-      targets = targets.sort((a: any, b: any) => {
-        let res = u.compareValues(priorities.indexOf(a.structureType), priorities.indexOf(b.structureType))
-        return res;
-      })
-    }
-    return targets[0]
   }
 
   // limit wall to 5000 first, when all finished, we recursively increase wall limits if nothing else to repair
@@ -129,7 +89,9 @@ export class RoleBuilder {
 
     targets.sort((a, b) => a.hits - b.hits);
 
-    if (targets.length == 0) {
+    let wallOrRamparts = creep.room.find(FIND_STRUCTURES, { filter: (s) => s.structureType == STRUCTURE_WALL || s.structureType == STRUCTURE_RAMPART })
+    // try upgrading walls or ramparts
+    if (targets.length == 0 && wallOrRamparts.length > 0) {
       // console.log("builder has repaired all, trying walls ", wallLimit + 50000)
       targets = this.findRepairSite(creep, wallLimit + 50000) as AnyStructure[]
     }

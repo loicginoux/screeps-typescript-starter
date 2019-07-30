@@ -6,7 +6,9 @@ export class RoleUpgrader {
   public static newTask(creep: Creep, availableEnergyStructures: EnergyStructure[]): void {
 
     if (creep.carry.energy == 0) {
-      this.getEnergy(creep, availableEnergyStructures);
+      u.whileCheckForDroppedEnergy(creep, () => {
+        this.getEnergy(creep, availableEnergyStructures);
+      })
     } else {
       const controller = creep.room.controller
       if (controller) {

@@ -4,6 +4,7 @@ type PubSubEventTypes =
   | BUILD_CONTAINER_NEEDED
   | BUILD_ROAD_NEEDED
   | BUILD_EXTENSION
+  | BUILD_LINK
   | TOWER_REQUEST
   | SPAWN_REQUEST
   | ROOM_ATTACKED
@@ -14,6 +15,7 @@ type BUILD_CONTAINER_NEEDED = "BUILD_CONTAINER_NEEDED";
 type BUILD_ROAD_NEEDED = "BUILD_ROAD_NEEDED";
 type SPAWN_REQUEST = "SPAWN_REQUEST";
 type BUILD_EXTENSION = "BUILD_EXTENSION";
+type BUILD_LINK = "BUILD_LINK";
 type TOWER_REQUEST = "TOWER_REQUEST";
 type ROOM_ATTACKED = "ROOM_ATTACKED";
 
@@ -53,6 +55,9 @@ interface Memory {
   miningSites: {
     [miningSourceId: string]: MiningSiteMemory
   }
+  roomExploration: {
+    [roomName: string]: RoomExplorationMemory
+  }
 }
 
 
@@ -62,7 +67,8 @@ interface RoomMemory {
   energyManager: EnergyManagerMemory
   defenseManager: RoomDefenseManagerMemory
   ctrlRoads?: boolean,
-  fortressRoads?: boolean,
+  sourceRoads?: boolean,
+  fortressRoadsLevel?: number,
   [object: string]: any
 }
 
@@ -78,6 +84,29 @@ interface LinkMemory {
   id: string;
   type: "from" | "fromto" | "to";
 }
+
+interface RoomExplorationMemory {
+  name: string;
+  rangeToMainRoom: number;
+  checked: boolean;
+  exitRooms: string[];
+  sourceKeeper?: boolean;
+  ctrl?: {
+    owner?: string;
+    reserved?: string;
+    level: number;
+  }
+  highway: boolean;
+  nbSource: number;
+  mineral?: {
+    type: MineralConstant;
+    density: number;
+    mineralAmount: number;
+  }
+  potentialHarvestingSite: boolean;
+  potentialDeployingSite: boolean;
+}
+
 
 // `global` extension samples
 declare namespace NodeJS {

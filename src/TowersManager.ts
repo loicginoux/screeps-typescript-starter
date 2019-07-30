@@ -113,24 +113,24 @@ export class TowersManager extends TickRunner {
       })
     }
 
-    var closestDamagedStructure = tower.pos.findClosestByRange(FIND_STRUCTURES, {
-      filter: (structure) => {
-        let res;
-        if (structure.structureType == STRUCTURE_WALL || structure.structureType == STRUCTURE_RAMPART) {
-          // limit wall strength to 5000
-          res = structure.hits < 5000
-        } else if (structure.structureType == STRUCTURE_ROAD) {
-          // do not repair roads, leave it to builders
-          res = false
-        } else {
-          res = structure.hits < structure.hitsMax
-        }
-        return res
-      }
-    });
+    // var closestDamagedStructure = tower.pos.findClosestByRange(FIND_STRUCTURES, {
+    //   filter: (structure) => {
+    //     let res;
+    //     if (structure.structureType == STRUCTURE_WALL || structure.structureType == STRUCTURE_RAMPART) {
+    //       // limit wall strength to 5000
+    //       res = structure.hits < 5000
+    //     } else if (structure.structureType == STRUCTURE_ROAD) {
+    //       // do not repair roads, leave it to builders
+    //       res = false
+    //     } else {
+    //       res = structure.hits < structure.hitsMax
+    //     }
+    //     return res
+    //   }
+    // });
 
-    if (closestDamagedStructure) {
-      tower.repair(closestDamagedStructure);
-    }
+    // if (closestDamagedStructure) {
+    //   tower.repair(closestDamagedStructure);
+    // }
   }
 }

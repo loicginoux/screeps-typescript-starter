@@ -11,6 +11,7 @@ export class EnergyManager extends TickRunner {
   towers: StructureTower[];
   energyAvailable: Structure[];
   energyNeeded: Structure[];
+  // droppedEnergies: Resource[];
 
   constructor(private room: Room) {
     super()
@@ -25,6 +26,7 @@ export class EnergyManager extends TickRunner {
   initMemory() {
     if (!Memory.rooms[this.room.name].energyManager) {
       let roomLinks = this.room.find(FIND_STRUCTURES, { filter: (i) => i.structureType == STRUCTURE_LINK })
+      // console.log("roomLinks", JSON.stringify(roomLinks))
       Memory.rooms[this.room.name].energyManager = {
         links: _.map(roomLinks, link => {
           let type;
@@ -54,6 +56,7 @@ export class EnergyManager extends TickRunner {
     this.spawns = this.room.find(FIND_STRUCTURES, { filter: (i) => i.structureType == STRUCTURE_SPAWN }) as StructureSpawn[];
     this.extensions = this.room.find(FIND_STRUCTURES, { filter: (i) => i.structureType == STRUCTURE_EXTENSION }) as StructureExtension[];
     this.towers = this.room.find(FIND_STRUCTURES, { filter: (i) => i.structureType == STRUCTURE_TOWER }) as StructureTower[];
+    // this.droppedEnergies = this.room.find(FIND_DROPPED_RESOURCES, { filter: (i) => i.resourceType == 'energy' }) as Resource[];
 
     this.energyAvailable = []
     this.energyNeeded = []
@@ -106,7 +109,7 @@ export class EnergyManager extends TickRunner {
 
   preCheck(): number {
     if (this.links.length < this.optimalLinksNumber()) {
-      console.log("links available, place them manually", this.room.name)
+      console.log("links available, place them manually or setup to/from", this.room.name)
     }
 
     if (this.storageNeeded()) {
@@ -121,6 +124,39 @@ export class EnergyManager extends TickRunner {
       }
     }
 
+    if (this.linksLevel5Needed()) {
+      // 2 links available
+      global.pubSub.publish('BUILD_LINK', {
+        near: this.room.storage!.pos,
+        room: this.room,
+      })
+      global.pubSub.publish('BUILD_LINK', {
+        near: this.room.controller!.pos,
+        room: this.room,
+      })
+    }
+
+    if (this.linksLevel6Needed()) {
+      const sources = this.room.find(FIND_SOURCES);
+      global.pubSub.publish('BUILD_LINK', {
+        near: sources[0].pos,
+        room: this.room,
+      })
+    }
+
+    if (this.linksLevel7Needed()) {
+      const sources = this.room.find(FIND_SOURCES);
+      if (sources.length >= 2) {
+        global.pubSub.publish('BUILD_LINK', {
+          near: sources[1].pos,
+          room: this.room,
+        })
+      }
+    }
+    if (this.linksLevel8Needed()) {
+      console.log("2 more links available... USE IT")
+    }
+
     return OK;
   }
 
@@ -133,9 +169,12 @@ export class EnergyManager extends TickRunner {
     return LinksAtLevel;
   }
 
-  storageNeeded(): boolean {
-    return !!(!this.storage && this.room.controller && this.room.controller.level >= 4);
-  }
+  storageNeeded(): boolean { return !!(!this.storage && this.room.controller && this.room.controller.level >= 4); }
+
+  linksLevel5Needed(): boolean { return !!(this.storage && this.room.controller && this.room.controller.level >= 5 && this.links.length == 0); }
+  linksLevel6Needed(): boolean { return !!(this.storage && this.room.controller && this.room.controller.level >= 6 && this.links.length == 2); }
+  linksLevel7Needed(): boolean { return !!(this.storage && this.room.controller && this.room.controller.level >= 7 && this.links.length == 3); }
+  linksLevel8Needed(): boolean { return !!(this.storage && this.room.controller && this.room.controller.level >= 8 && this.links.length == 4); }
 
   act() {
     this.doLinkTransfer()

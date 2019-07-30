@@ -30,6 +30,7 @@ var constructionSite = _.sortBy(creep.room.find(FIND_CONSTRUCTION_SITES), s => c
 var sources = _.sortBy(creep.room.find(FIND_SOURCES_ACTIVE), s => creep.pos.getRangeTo(s))
 
 // create construction site
+Game.rooms.W11N11.createConstructionSite(28, 19, STRUCTURE_SPAWN)
 Game.rooms.E17N41.createConstructionSite(22, 13, STRUCTURE_CONTAINER)
 Game.rooms.E17N41.createConstructionSite(45, 37, STRUCTURE_RAMPART);
 Game.rooms.E17N41.createConstructionSite(47, 37, STRUCTURE_WALL);
@@ -44,3 +45,6 @@ JSON.stringify(mainRoom.room.findPath((new RoomPosition(12, 17, mainRoom.room.na
   ignoreCreeps: true,
   maxRooms: 1
 }))
+
+
+  (new RoomPosition(10, 10, "E17N40")).room.findExitTo((new RoomPosition(10, 10, "E17N41")).room)

@@ -11,27 +11,18 @@ export class RoleMiningSiteBuilder {
       }
     } else {
       // u.log("findClosestEnergyStructure")
-      const constructionSiteId = Memory.miningSites[source.id].buildingContainer
-      if (constructionSiteId) {
-        const constructionSite = Game.getObjectById(constructionSiteId) as ConstructionSite
-        if (constructionSite) {
-          if (creep.pos.getRangeTo(constructionSite) > 1) {
-            creep.task = Tasks.goTo(constructionSite)
-          } else {
-            creep.task = Tasks.build(constructionSite)
-          }
+      let buildingContainers = source.pos.findInRange(FIND_CONSTRUCTION_SITES, 3, {
+        filter: i => i.structureType === STRUCTURE_CONTAINER
+      })
+
+      if (buildingContainers[0]) {
+        if (creep.pos.getRangeTo(buildingContainers[0]) > 1) {
+          creep.task = Tasks.goTo(buildingContainers[0])
+        } else {
+          creep.task = Tasks.build(buildingContainers[0])
         }
-      } else {
-        // all mining site buildings done
-        // const controller = creep.room.controller
-        // if (controller) {
-        //   if (creep.pos.getRangeTo(controller) > 1) {
-        //     creep.task = Tasks.goTo(controller.pos)
-        //   } else {
-        //     creep.task = Tasks.upgrade(controller)
-        //   }
-        // }
       }
+
     }
   }
 }
