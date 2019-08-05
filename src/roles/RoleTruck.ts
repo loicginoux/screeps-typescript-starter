@@ -13,8 +13,8 @@ export class RoleTruck {
       })
     } else {
       let structure = this.transferEnergy(creep, neededEnergyStructures)
-      if (structure) {
-        let target = u.tryBuilding(creep);
+      if (!structure) {
+        u.tryBuilding(creep);
       }
     }
   }

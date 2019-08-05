@@ -14,7 +14,7 @@ export class RoleMiningSiteTruck {
     } else {
       let structure = this.transferEnergy(creep, neededEnergyStructures)
       if (!structure) {
-        let target = u.tryBuilding(creep);
+        u.tryBuilding(creep);
       }
     }
   }

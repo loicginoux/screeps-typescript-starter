@@ -25,7 +25,7 @@ export class RoomCommander extends TickRunner {
   minUpgraders = 3;
   minBuilders = 2;
   minTrucks = 2;
-  extensionsNeededCount: number | null;
+  // extensionsNeededCount: number | null;
   upgraders: Creep[] = [];
   builders: Creep[] = [];
   trucks: Creep[] = [];
@@ -69,6 +69,7 @@ export class RoomCommander extends TickRunner {
         extensions: 0
       }
     }
+    this.roomPlanner.initMemory()
     this.memory = Memory.rooms[this.room.name];
   }
 
@@ -120,19 +121,19 @@ export class RoomCommander extends TickRunner {
 
     // build roads to controller
     // if destroyed will be rebuilt every 1000
-    if (!this.memory.ctrlRoads || u.every(1000)) {
-      this.roomPlanner.buildControllerRoads()
-      this.memory.ctrlRoads = true
-    }
+    // if (!this.memory.ctrlRoads || u.every(1000)) {
+    //   this.roomPlanner.buildControllerRoads()
+    //   this.memory.ctrlRoads = true
+    // }
 
-    if ((!this.memory.sourceRoads || u.every(1000)) && this.room.controller && this.room.controller.level >= 3) {
-      this.roomPlanner.buildSourceRoads()
-      this.memory.sourceRoads = true
-    }
+    // if ((!this.memory.sourceRoads || u.every(1000)) && this.room.controller && this.room.controller.level >= 3) {
+    //   this.roomPlanner.buildSourceRoads()
+    //   this.memory.sourceRoads = true
+    // }
 
-    if (this.fortressRoadsNeeded()) {
-      this.roomPlanner.buildFortressRoads()
-      this.memory.fortressRoadsLevel = this.room.controller!.level
+    if (this.cityConstructionsNeeded()) {
+      this.roomPlanner.createConstructionSites(this.room.controller!.level)
+      this.memory.cityConstructionLevel = this.room.controller!.level
     }
 
     if (this.roomBuildersNeeded()) {
@@ -146,23 +147,28 @@ export class RoomCommander extends TickRunner {
       } as SpawningRequest)
     }
 
-    if (this.extensionsNeeded() > 0) {
-      let firstSpawner = this.room.find(FIND_MY_STRUCTURES, {
-        filter: i => i.structureType === STRUCTURE_SPAWN
-      }) as StructureSpawn[];
-      if (firstSpawner[0]) {
-        global.pubSub.publish('BUILD_EXTENSION', {
-          near: firstSpawner[0].pos,
-          extensionCount: this.extensionsNeeded(),
-          room: this.room,
-        })
-      }
-    }
+    // if (this.extensionsNeeded() > 0) {
+    //   let firstSpawner = this.room.find(FIND_MY_STRUCTURES, {
+    //     filter: i => i.structureType === STRUCTURE_SPAWN
+    //   }) as StructureSpawn[];
+    //   if (firstSpawner[0]) {
+    //     global.pubSub.publish('BUILD_EXTENSION', {
+    //       near: firstSpawner[0].pos,
+    //       extensionCount: this.extensionsNeeded(),
+    //       room: this.room,
+    //     })
+    //   }
+    // }
     super.preCheck()
     return OK;
   }
 
   act() {
+    if (this.roomPlanner && this.roomPlanner.memory && this.roomPlanner.memory.plans.roads.length == 0) {
+      this.roomPlanner.planCity()
+    }
+    this.roomPlanner.drawCity();
+
     _.forEach(this.upgraders, creep => {
       if (creep.isIdle) {
         RoleUpgrader.newTask(creep, this.availableEnergySources);
@@ -203,25 +209,25 @@ export class RoomCommander extends TickRunner {
     return !!this.memory.ctrlRoads && ((this.minBuilders - this.builders.length) > 0);
   }
 
-  fortressRoadsNeeded(): boolean | undefined {
+  cityConstructionsNeeded(): boolean | undefined {
     // return false;
-    return this.room.controller && (!this.memory.fortressRoadsLevel || this.room.controller.level > this.memory.fortressRoadsLevel || u.every(10000));
+    return this.room.controller && (!this.memory.cityConstructionLevel || this.room.controller.level > this.memory.cityConstructionLevel);
   }
 
-  extensionsNeeded(): number {
-    if (this.extensionsNeededCount) {
-      return this.extensionsNeededCount
-    }
-    let extensions = this.room.find(FIND_STRUCTURES, { filter: (i) => i.structureType == STRUCTURE_EXTENSION }) as StructureExtension[];
-    this.extensionsNeededCount = 0
-    let extensionsAtLevel = 0
-    let extensions_per_level = [0, 0, 5, 10, 20, 30, 40, 50, 60]
-    if (this.room.controller) {
-      extensionsAtLevel = extensions_per_level[this.room.controller.level]
-      this.extensionsNeededCount = extensionsAtLevel - extensions.length
-    }
-    return this.extensionsNeededCount;
-  }
+  // extensionsNeeded(): number {
+  //   if (this.extensionsNeededCount) {
+  //     return this.extensionsNeededCount
+  //   }
+  //   let extensions = this.room.find(FIND_STRUCTURES, { filter: (i) => i.structureType == STRUCTURE_EXTENSION }) as StructureExtension[];
+  //   this.extensionsNeededCount = 0
+  //   let extensionsAtLevel = 0
+  //   let extensions_per_level = [0, 0, 5, 10, 20, 30, 40, 50, 60]
+  //   if (this.room.controller) {
+  //     extensionsAtLevel = extensions_per_level[this.room.controller.level]
+  //     this.extensionsNeededCount = extensionsAtLevel - extensions.length
+  //   }
+  //   return this.extensionsNeededCount;
+  // }
 
 
 }
