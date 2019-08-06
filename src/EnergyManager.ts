@@ -25,27 +25,27 @@ export class EnergyManager extends TickRunner {
 
   initMemory() {
     if (!Memory.rooms[this.room.name].energyManager) {
-      let roomLinks = this.room.find(FIND_STRUCTURES, { filter: (i) => i.structureType == STRUCTURE_LINK })
       // console.log("roomLinks", JSON.stringify(roomLinks))
-      Memory.rooms[this.room.name].energyManager = {
-        links: _.map(roomLinks, link => {
-          let type;
-          if (this.room.controller && link.pos.inRangeTo(this.room.controller.pos.x, this.room.controller.pos.y, 4)) {
-            type = "to"
-          }
-          if (this.room.storage && link.pos.inRangeTo(this.room.storage.pos.x, this.room.storage.pos.y, 4)) {
-            type = "from"
-          }
-          return {
-            id: link.id,
-            type: type
-          } as LinkMemory
-        })
-      }
+      Memory.rooms[this.room.name].energyManager = {}
     }
     this.memory = Memory.rooms[this.room.name].energyManager;
-    this.memory.links = this.memory.links || [];
-    this.memory.links = this.memory.links.filter(i => !!Game.getObjectById(i.id));
+
+    let roomLinks = this.room.find(FIND_STRUCTURES, { filter: (i) => i.structureType == STRUCTURE_LINK })
+    // console.log("roomLinks", JSON.stringify(roomLinks))
+    this.memory.links = _.map(roomLinks, link => {
+      let type;
+      if (this.room.controller && link.pos.inRangeTo(this.room.controller.pos.x, this.room.controller.pos.y, 4)) {
+        type = "to"
+      }
+      if (this.room.storage && link.pos.inRangeTo(this.room.storage.pos.x, this.room.storage.pos.y, 4)) {
+        type = "from"
+      }
+      return {
+        id: link.id,
+        type: type
+      } as LinkMemory
+    })
+    // this.memory.links = this.memory.links.filter(i => !!Game.getObjectById(i.id));
 
   }
 

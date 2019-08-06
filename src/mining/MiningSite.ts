@@ -60,10 +60,6 @@ export class MiningSite extends TickRunner {
           this.trucks.push(creep)
           trucksid.push(creep.id)
         }
-        if (creep.name.includes('miningSiteBuilder') && !buildersid.includes(creep.id)) {
-          this.builders.push(creep)
-          buildersid.push(creep.id)
-        }
       }
     })
   }

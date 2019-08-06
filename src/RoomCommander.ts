@@ -12,6 +12,7 @@ import { RoleTruck } from "roles/RoleTruck";
 import { RoomPlanner } from "room_planning/RoomPlanner";
 import { u } from 'utils/Utils';
 import { EnergyStructure } from "creep-tasks/utilities/helpers";
+import { RemoteHarvestingManager } from "RemoteHarvestingManager";
 
 
 export class RoomCommander extends TickRunner {
@@ -22,6 +23,7 @@ export class RoomCommander extends TickRunner {
   towersManager: TowersManager;
   energyManager: EnergyManager;
   roomPlanner: RoomPlanner;
+  remoteHarvestingManager: RemoteHarvestingManager;
   minUpgraders = 3;
   minBuilders = 2;
   minTrucks = 2;
@@ -119,18 +121,6 @@ export class RoomCommander extends TickRunner {
       // this.preCheckResult = ERR_NOT_ENOUGH_RESOURCES
     }
 
-    // build roads to controller
-    // if destroyed will be rebuilt every 1000
-    // if (!this.memory.ctrlRoads || u.every(1000)) {
-    //   this.roomPlanner.buildControllerRoads()
-    //   this.memory.ctrlRoads = true
-    // }
-
-    // if ((!this.memory.sourceRoads || u.every(1000)) && this.room.controller && this.room.controller.level >= 3) {
-    //   this.roomPlanner.buildSourceRoads()
-    //   this.memory.sourceRoads = true
-    // }
-
     if (this.cityConstructionsNeeded()) {
       this.roomPlanner.createConstructionSites(this.room.controller!.level)
       this.memory.cityConstructionLevel = this.room.controller!.level
@@ -206,7 +196,7 @@ export class RoomCommander extends TickRunner {
   trucksNeeded(): number { return this.minTrucks - this.trucks.length; }
 
   roomBuildersNeeded(): boolean {
-    return !!this.memory.ctrlRoads && ((this.minBuilders - this.builders.length) > 0);
+    return (this.minBuilders - this.builders.length) > 0;
   }
 
   cityConstructionsNeeded(): boolean | undefined {

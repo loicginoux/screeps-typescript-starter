@@ -102,35 +102,41 @@ export class TowersManager extends TickRunner {
     if (closestHostile) {
       // keep track for replay
       this.memory.lastAttack = Game.time
-      var username = closestHostile.owner.username;
-      if (username != "Invader") {
-        Game.notify(`User ${username} spotted in room ${this.room.name}`);
-      }
+
+      // if (closestHostile.owner) {
+      //   var username = closestHostile.owner.username;
+      //   if (username && username != "Invader") {
+      //     Game.notify(`User ${username} spotted in room ${this.room.name}`);
+      //   }
+      // }
       tower.attack(closestHostile);
       global.pubSub.publish('ROOM_ATTACKED', {
         room: this.room.name,
         priority: 100,
       })
+    } else {
+      var closestDamagedStructure = tower.pos.findClosestByRange(FIND_STRUCTURES, {
+        filter: (structure) => {
+          let res;
+          if (structure.structureType == STRUCTURE_WALL || structure.structureType == STRUCTURE_RAMPART) {
+            // limit wall strength to 5000
+            res = structure.hits < 5000
+            // } else if (structure.structureType == STRUCTURE_ROAD) {
+            //   // do not repair roads, leave it to builders
+            //   res = false
+          } else {
+            // only help builders when it starts being really deprecataed
+            res = structure.hits < (structure.hitsMax / 10)
+          }
+          return res
+        }
+      });
+
+      if (closestDamagedStructure) {
+        tower.repair(closestDamagedStructure);
+      }
     }
 
-    // var closestDamagedStructure = tower.pos.findClosestByRange(FIND_STRUCTURES, {
-    //   filter: (structure) => {
-    //     let res;
-    //     if (structure.structureType == STRUCTURE_WALL || structure.structureType == STRUCTURE_RAMPART) {
-    //       // limit wall strength to 5000
-    //       res = structure.hits < 5000
-    //     } else if (structure.structureType == STRUCTURE_ROAD) {
-    //       // do not repair roads, leave it to builders
-    //       res = false
-    //     } else {
-    //       res = structure.hits < structure.hitsMax
-    //     }
-    //     return res
-    //   }
-    // });
 
-    // if (closestDamagedStructure) {
-    //   tower.repair(closestDamagedStructure);
-    // }
   }
 }

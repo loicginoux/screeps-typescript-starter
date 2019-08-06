@@ -1,4 +1,4 @@
-- review room planner
+- room planner: ramparts + labs
 - harvest adjacentes rooms
 - installer grafana https://github.com/bonzaiferroni/bonzAI/wiki/Screepspl.us-agent-with-Compute-Engine
 - test soldier script
@@ -6,3 +6,14 @@
 
 
 - if too much CPU use, do one pass on empire to store all structures via for find on all structures and share ref to employees or store in mem
+
+
+for each exit of main room
+  go to room
+  reserve it (claim part)
+  store in memory sources position, mineral type and position
+  alert base that remote hauler, remote container and remote truck needed
+
+  roomCommander -> remoteHarvestingManager, spawn for each remote source a work team (1 hauler / 1 truck / 1 builder)
+  base spawn creeps
+  creeps go to source and do their job

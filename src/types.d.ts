@@ -66,8 +66,8 @@ interface RoomMemory {
   towersManager: TowerManagerMemory
   energyManager: EnergyManagerMemory
   defenseManager: RoomDefenseManagerMemory
-  ctrlRoads?: boolean,
-  sourceRoads?: boolean,
+  // ctrlRoads?: boolean,
+  // sourceRoads?: boolean,
   fortressRoadsLevel?: number,
   [object: string]: any
 }
