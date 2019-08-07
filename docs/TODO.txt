@@ -9,11 +9,23 @@
 
 
 for each exit of main room
+  spawn a reserver
+  get next room to go and reserve
   go to room
-  reserve it (claim part)
+  analyse room (enemy, distance from base to source)
+  if one source good reserve it
+  else mark room as avoid
   store in memory sources position, mineral type and position
-  alert base that remote hauler, remote container and remote truck needed
+  prepare roads constructions for this source
+  alert base that can start reserving another room
 
-  roomCommander -> remoteHarvestingManager, spawn for each remote source a work team (1 hauler / 1 truck / 1 builder)
+  roomCommander -> remoteHarvestingManager, spawn for each remote source a work team (1 remote harvester / 1 remote truck)
   base spawn creeps
-  creeps go to source and do their job
+  long distance harvester:
+    go to source
+    start harvesting to build container first and then fill container, when container full, drop energy on ground
+  long distance truck:
+    go to source
+
+    get energy
+    build road

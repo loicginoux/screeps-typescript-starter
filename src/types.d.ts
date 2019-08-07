@@ -58,6 +58,7 @@ interface Memory {
   roomExploration: {
     [roomName: string]: RoomExplorationMemory
   }
+  mainRoomName: string
 }
 
 
@@ -88,8 +89,6 @@ interface LinkMemory {
 interface RoomExplorationMemory {
   name: string;
   rangeToMainRoom: number;
-  checked: boolean;
-  exitRooms: string[];
   sourceKeeper?: boolean;
   ctrl?: {
     owner?: string;
@@ -97,14 +96,21 @@ interface RoomExplorationMemory {
     level: number;
   }
   highway: boolean;
-  nbSource: number;
+  sources: {
+    pos: RoomPosition;
+    id: string;
+  }[];
   mineral?: {
     type: MineralConstant;
     density: number;
     mineralAmount: number;
+    pos: RoomPosition;
+    id: string;
   }
   potentialHarvestingSite: boolean;
   potentialDeployingSite: boolean;
+  mine: boolean;
+  lastChecked: number;
 }
 
 

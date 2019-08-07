@@ -17,6 +17,9 @@ import { RoleExplorer } from "roles/RoleExplorer";
 export class RemoteHarvestingManager extends TickRunner {
   minExplorer = 1;
 
+  // reservers
+  // long distance truck
+  // long distance harvester
   explorers: Creep[] = [];
 
   constructor(private room: Room) {
@@ -52,6 +55,19 @@ export class RemoteHarvestingManager extends TickRunner {
         room: this.room
       } as SpawningRequest)
     }
+
+    if (this.remoteHarvestingRoomWithoutReserver().length > 0) {
+      global.pubSub.publish('SPAWN_REQUEST', {
+        role: 'reserver',
+        memory: {
+          room: this.room.name,
+          roomTarget: this.remoteHarvestingRoomWithoutReserver()[0].name
+        },
+        priority: 1,
+        room: this.room
+      } as SpawningRequest)
+    }
+
     super.preCheck()
     return OK;
   }
@@ -67,5 +83,15 @@ export class RemoteHarvestingManager extends TickRunner {
     super.act()
   }
 
-  explorersNeeded(): number { return this.minExplorer - this.explorers.length; }
+  explorersNeeded(): number {
+    let res = 0
+    if (this.room.controller && this.room.controller.level > 3) {
+      res = this.minExplorer - this.explorers.length;
+    }
+    return res
+  }
+
+  remoteHarvestingRoomWithoutReserver(): Room[] {
+    return []
+  }
 }

@@ -44,12 +44,20 @@ export class RoomCommander extends TickRunner {
     this.energyManager = new EnergyManager(this.room)
     this.roomDefenseManager = new RoomDefenseManager(this.room)
     this.roomPlanner = new RoomPlanner(this.room)
+    this.remoteHarvestingManager = new RemoteHarvestingManager(this.room)
     global.pubSub.subscribe('ENERGY_AVAILABLE', this.storeAvailabelEnergySources.bind(this))
     global.pubSub.subscribe('ENERGY_NEEDED', this.storeNeededEnergySources.bind(this))
   }
 
   employees(): any[] {
-    return [this.spawner, this.miningMinister, this.towersManager, this.roomDefenseManager, this.energyManager];
+    return [
+      this.spawner,
+      this.miningMinister,
+      this.towersManager,
+      this.roomDefenseManager,
+      this.energyManager,
+      this.remoteHarvestingManager
+    ];
   }
 
   loadData() {

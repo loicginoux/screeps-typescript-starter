@@ -14,55 +14,32 @@ export class Empire extends TickRunner {
   // build memory data from creeps roles (including newly spawned)
   // build memory data from finished construction sites
   loadData(): void {
-    this.roomCommanders = _.map(Game.rooms, room => {
-      const roomCommander = new RoomCommander(room)
-      return roomCommander
-    });
-
-    _.forEach(Game.creeps, creep => {
-      if (creep.name.includes('explorer')) {
-        this.explorers.push(creep)
+    this.roomCommanders = []
+    _.forEach(Game.rooms, room => {
+      let firstSpawner = room.find(FIND_MY_STRUCTURES, {
+        filter: i => i.structureType === STRUCTURE_SPAWN
+      }) as StructureSpawn[];
+      if (firstSpawner[0]) {
+        if (!Memory.mainRoomName) {
+          Memory.mainRoomName = room.name
+        }
+        this.roomCommanders.push(new RoomCommander(room))
       }
-    })
+    });
 
     // do not forget
     super.loadData();
   }
 
   preCheck() {
-    if (this.explorerNeeded() > 0) {
-      global.pubSub.publish('SPAWN_REQUEST', {
-        role: 'explorer',
-        priority: 1,
-        memory: {
-          rangeToMainRoom: 0
-        },
-        room: Game.rooms[0]
-      } as SpawningRequest)
-    }
+
 
     super.preCheck()
     return OK;
   }
 
-  explorerNeeded(): number {
-    return 0
-    // let res = 0
-    // if (Game.rooms[0].controller && Game.rooms[0].controller.level > 3) {
-    //   res = this.minExplorer - this.explorers.length;
-    // }
-    // return res
-  }
-
   act() {
     SafeModeActivator.activeSafeModeIfNecessary()
-
-    _.forEach(this.explorers, creep => {
-      if (creep.isIdle) {
-        RoleExplorer.newTask(creep);
-      }
-      creep.run()
-    })
 
     super.act()
   }

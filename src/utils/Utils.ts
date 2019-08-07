@@ -14,12 +14,12 @@ class Utils {
   static displayVisualRoles(room: Room) {
     const roles: any = {
       "truck": '🚚',
-      "miningSiteTruck": '🚚',
+      "miningSiteTruck": '🚛',
       "harvester": '🔨',
       "builder": '🚜',
       "explorer": '👁️',
       "upgrader": '🚀',
-      "claimer": '🏁',
+      "reserver": '💋',
       "soldier": '🔪',
       "ranged_attack": '🔫'
     }
@@ -27,10 +27,10 @@ class Utils {
     _.forEach(Game.creeps, creep => {
       const role = creep.name.split('_')[0]
       const icon = roles[role] || ''
-      if (icon) {
+      if (icon && creep.pos.roomName == room.name) {
         room.visual.text(icon, creep.pos.x, creep.pos.y + 0.1, { font: 0.4 })
       }
-      room.visual.text(icon, creep.pos.x, creep.pos.y + 0.1, { font: 0.4 })
+
     });
   }
 
@@ -75,7 +75,7 @@ class Utils {
     var energy = creep.pos.findInRange(FIND_DROPPED_RESOURCES, 5);
     let found = false
     if (energy.length && creep.carry.energy == 0) {
-      console.log(creep.name, 'found energy at ', energy[0].pos);
+      // console.log(creep.name, 'found energy at ', energy[0].pos);
       if (creep.pickup(energy[0]) == ERR_NOT_IN_RANGE) {
         creep.task = Tasks.goTo(energy[0])
       };

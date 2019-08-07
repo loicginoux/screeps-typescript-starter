@@ -8,10 +8,12 @@ type SpawnType =
   | "miningSiteBuilder"
   | "builder"
   | "soldier"
-  | "explorer";
+  | "explorer"
+  | "long-distance-harvester"
+  | "long-distance-truck"
+  | "reserver";
 // | "reparator"
 // | "fighter"
-// | "long-distance-harvester"
 // | "pickaboo"
 // | "healer"
 // | "claimer"
@@ -26,7 +28,8 @@ export interface SpawningRequest {
   room: Room,
   memory: {
     room?: string,
-    miningSite?: MiningSite
+    miningSite?: MiningSite,
+    roomTarget?: string
   }
   priority: number,
   spawner?: StructureSpawn

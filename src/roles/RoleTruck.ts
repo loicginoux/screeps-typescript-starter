@@ -106,8 +106,8 @@ export class RoleTruck {
     const priorities = [
       STRUCTURE_TOWER,
       STRUCTURE_SPAWN,
-      STRUCTURE_LINK,
       STRUCTURE_EXTENSION,
+      STRUCTURE_LINK,
       STRUCTURE_STORAGE,
     ]
 

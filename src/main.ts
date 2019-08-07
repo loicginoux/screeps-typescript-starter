@@ -13,7 +13,7 @@ export const loop = ErrorMapper.wrapLoop(() => {
 
   global.memorySize = RawMemory.get().length;
 
-  console.log(`tick: ${Game.time} - cpu: ${_.round((Game.cpu.getUsed() * 100), 2)} - mem: ${global.memorySize}`);
+  // console.log(`tick: ${Game.time} - cpu: ${_.round((Game.cpu.getUsed() * 100), 2)} - mem: ${global.memorySize}`);
 
   // general publish subscriber used for inter module communication
   global.pubSub = new PubSub();
