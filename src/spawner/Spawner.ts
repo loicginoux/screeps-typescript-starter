@@ -29,7 +29,7 @@ export class Spawner extends TickRunner {
     }
 
     // spawner with less energy first
-    this.availableSpawner = _.sortBy(this.availableSpawner, (spawner) => spawner.energy)
+    // this.availableSpawner = _.sortBy(this.availableSpawner, (spawner) => spawner.energy)
 
     return OK;
   }

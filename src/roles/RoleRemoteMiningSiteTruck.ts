@@ -1,11 +1,10 @@
 import { Tasks } from 'creep-tasks/Tasks'
 import { EnergyStructure } from 'creep-tasks/utilities/helpers';
-import { Spawner } from 'spawner/Spawner';
+import { RoleMiningSiteTruck } from "roles/RoleMiningSiteTruck";
 import { u } from "utils/Utils";
-import { EnergyManager } from "EnergyManager";
 
 
-export class RoleMiningSiteTruck {
+export class RoleRemoteMiningSiteTruck extends RoleMiningSiteTruck {
   public static newTask(creep: Creep, availableEnergyStructures: EnergyStructure[], neededEnergyStructures: EnergyStructure[]): void {
     // creep has no evergy, go to container 1 get some
     if (creep.carry.energy == 0) {
@@ -13,11 +12,12 @@ export class RoleMiningSiteTruck {
         this.getEnergy(creep, availableEnergyStructures);
       })
     } else {
-      let structure = this.transferEnergy(creep, neededEnergyStructures)
-      // console.log(creep.name, "neededEnergyStructures[0]", structure)
-      if (!structure) {
-        // console.log(creep.name, " try building")
-        u.tryBuilding(creep);
+      // console.log(creep.name, " try building")
+      let constructionSite = u.tryBuilding(creep);
+      if (!constructionSite) {
+        this.whileCheckForRepairSite(creep, () => {
+          this.transferEnergy(creep, neededEnergyStructures)
+        })
       }
     }
   }
@@ -86,49 +86,20 @@ export class RoleMiningSiteTruck {
         // global.pubSub.publish('UNASSIGNED_ENERGY_TARGET', { creep: creep, target: availableEnergyStructures[0] })
         creep.task = Tasks.withdraw(availableEnergyStructures[0])
       }
-      // } else {
-      //   // else get from source directly
-      //   let sources = creep.room.find(FIND_SOURCES_ACTIVE) as Source[]
-      //   sources = _.sortBy(sources, s => creep.pos.getRangeTo(s))
-      //   if (sources.length > 0) {
-      //     if (creep.pos.getRangeTo(sources[0]) > 1) {
-      //       // creep.task = Tasks.goTo(sources[0])
-      //       creep.travelTo(sources[0])
-      //     } else {
-      //       creep.task = Tasks.harvest(sources[0])
-      //     }
-      //   }
     }
   }
 
-  public static transferEnergy(creep: Creep, neededEnergyStructures: EnergyStructure[]) {
-    const priorities = [
-      STRUCTURE_STORAGE,
-      STRUCTURE_TOWER,
-      STRUCTURE_EXTENSION,
-      STRUCTURE_SPAWN,
-      STRUCTURE_LINK,
-    ]
-
-    // sort by priority and then range
-    neededEnergyStructures = _.filter(neededEnergyStructures, i => _.includes(priorities, i.structureType))
-    neededEnergyStructures = neededEnergyStructures.sort((a: any, b: any) => {
-      let res = u.compareValues(priorities.indexOf(a.structureType), priorities.indexOf(b.structureType))
-      return res === 0
-        ? u.compareValues(creep.pos.getRangeTo(a), creep.pos.getRangeTo(b))
-        : res;
-    })
-
-    // get from containers first
-    if (neededEnergyStructures.length > 0) {
-      // console.log("mining site truck neededEnergyStructures[0]", creep.pos, neededEnergyStructures[0].structureType, neededEnergyStructures[0].pos)
-      if (creep.pos.getRangeTo(neededEnergyStructures[0]) > 1) {
-        // creep.task = Tasks.goTo(neededEnergyStructures[0])
-        creep.travelTo(neededEnergyStructures[0])
-      } else {
-        creep.task = Tasks.transfer(neededEnergyStructures[0])
-      }
+  // when creep is moving it checks for repair roads in remote rooms, if he does not found, he run the callback function
+  public static whileCheckForRepairSite(creep: Creep, callback: () => any) {
+    var structures = creep.pos.findInRange(FIND_STRUCTURES, 1).filter(s => { return s.hits / s.hitsMax < 0.8 });
+    let found = false
+    if (structures.length && creep.carry.energy > 0) {
+      console.log(creep.name, 'found struct to repair at', structures[0].pos);
+      creep.task = Tasks.repair(structures[0])
+      found = true;
     }
-    return neededEnergyStructures[0]
+    if (!found) {
+      callback();
+    }
   }
 }

@@ -21,6 +21,8 @@ type ROOM_ATTACKED = "ROOM_ATTACKED";
 
 interface CreepMemory {
   room: string;
+  roomTarget: string;
+  energyTarget?: string | null;
   buildingSourceId: string | null;
   miningSourceId: string | null;
   working: boolean;
@@ -52,24 +54,28 @@ interface Memory {
   uuid: number;
   log: any;
   debug: number; // show debug console logs
+  lastProgress: number;
+  lastCheckTime: number;
   miningSites: {
     [miningSourceId: string]: MiningSiteMemory
   }
   roomExploration: {
     [roomName: string]: RoomExplorationMemory
   }
-  mainRoomName: string
+  mainRooms: string[]
+  energyManager: EnergyManagerMemory
 }
 
 
 interface RoomMemory {
   avoid?: boolean;
   towersManager: TowerManagerMemory
-  energyManager: EnergyManagerMemory
   defenseManager: RoomDefenseManagerMemory
   // ctrlRoads?: boolean,
   // sourceRoads?: boolean,
-  fortressRoadsLevel?: number,
+  fortressRoadsLevel?: number
+  remoteHarvestingOn: boolean // switch on/off remote harvesting
+  forcedHarvestRooms?: string[] // force remote harvesting on certain rooms only
   [object: string]: any
 }
 
@@ -79,6 +85,9 @@ interface RoomDefenseManagerMemory {
 
 interface EnergyManagerMemory {
   links?: LinkMemory[];
+  assignation: {
+    [object: string]: string[]
+  }
 }
 
 interface LinkMemory {
@@ -88,12 +97,17 @@ interface LinkMemory {
 
 interface RoomExplorationMemory {
   name: string;
-  rangeToMainRoom: number;
+  rangeToMainRoom?: number | undefined;
+  nearestCity: {
+    room: string;
+    range: number | undefined;
+  };
   sourceKeeper?: boolean;
   ctrl?: {
     owner?: string;
     reserved?: string;
     level: number;
+    pos: RoomPosition;
   }
   highway: boolean;
   sources: {

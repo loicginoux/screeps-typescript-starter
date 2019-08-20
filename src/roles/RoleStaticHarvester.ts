@@ -1,4 +1,4 @@
-import { Tasks } from 'creep-tasks/Tasks'; 
+import { Tasks } from 'creep-tasks/Tasks';
 
 export class RoleStaticHarvester {
   public static newTask(creep: Creep, source: Source, container: StructureContainer): void {
@@ -10,9 +10,13 @@ export class RoleStaticHarvester {
       }
     } else {
       if (creep.pos.getRangeTo(container) > 2) {
-        creep.task = Tasks.goTo(source.pos)
+        creep.task = Tasks.goTo(container.pos)
       } else {
-        creep.task = Tasks.transfer(container)
+        if ((container.hits / container.hitsMax) <= 0.8) {
+          creep.task = Tasks.repair(container);
+        } else {
+          creep.task = Tasks.transfer(container)
+        }
       }
     }
   }

@@ -1,32 +1,56 @@
 import { TickRunner } from "TickRunner";
+import { Architect } from "Architect";
 import { RoomCommander } from "RoomCommander";
+import { EnergyManager } from "EnergyManager";
 import { SafeModeActivator } from "utils/SafeModeActivator";
-import { SpawningRequest } from "spawner/SpawningRequest";
-import { RoleExplorer } from "roles/RoleExplorer";
+import { u } from 'utils/Utils';
+
+// import { SpawningRequest } from "spawner/SpawningRequest";
+// import { RoleExplorer } from "roles/RoleExplorer";
 
 export class Empire extends TickRunner {
+  memory: Memory;
   roomCommanders!: RoomCommander[];
+  architect: Architect;
+  energyManager: EnergyManager;
   minExplorer = 1;
   explorers: Creep[] = [];
 
-  employees(): TickRunner[] { return this.roomCommanders; }
+  constructor() {
+    super()
+    this.architect = new Architect()
+    this.energyManager = new EnergyManager()
+  }
+
+  initMemory() {
+    // if (!Memory.energyManager) { Memory.energyManager = {} }
+    Memory.mainRooms = []
+    this.memory = Memory;
+
+
+  }
+
+  employees(): TickRunner[] {
+    let employees: TickRunner[] = this.roomCommanders
+    employees.push(this.energyManager)
+    return employees;
+  }
 
   // build memory data from creeps roles (including newly spawned)
   // build memory data from finished construction sites
   loadData(): void {
+    this.initMemory();
     this.roomCommanders = []
     _.forEach(Game.rooms, room => {
       let firstSpawner = room.find(FIND_MY_STRUCTURES, {
         filter: i => i.structureType === STRUCTURE_SPAWN
       }) as StructureSpawn[];
       if (firstSpawner[0]) {
-        if (!Memory.mainRoomName) {
-          Memory.mainRoomName = room.name
-        }
+        Memory.mainRooms.push(room.name)
         this.roomCommanders.push(new RoomCommander(room))
       }
     });
-
+    // this.energyManager.showAssignations()
     // do not forget
     super.loadData();
   }
@@ -42,5 +66,10 @@ export class Empire extends TickRunner {
     SafeModeActivator.activeSafeModeIfNecessary()
 
     super.act()
+  }
+
+  finalize() {
+    u.displayVisualRoles();
+    super.finalize()
   }
 }

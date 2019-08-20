@@ -1,6 +1,7 @@
+import { u } from "utils/utils"
 export class RoomDiscovery {
   memory: RoomExplorationMemory
-  constructor(public room: Room, public creep: Creep) {
+  constructor(public room: Room, public creep?: Creep) {
     if (!Memory.roomExploration) {
       Memory.roomExploration = {}
     }
@@ -14,13 +15,16 @@ export class RoomDiscovery {
     } else {
       roomMemory = this.analyzeNewRoom()
     }
-    console.log("roomMemory", JSON.stringify(roomMemory))
+    // console.log("roomMemory", JSON.stringify(roomMemory))
   }
 
   analyzeNewRoom(): RoomExplorationMemory {
     let roomMemory = {
       name: this.room.name,
-      rangeToMainRoom: this.getRangeToMainRoom(),
+      nearestCity: {
+        room: this.room.name,
+        range: this.getRangeToCity()
+      },
       sourceKeeper: this.isSourceKeeperRoom(),
       highway: this.isHighwayRoom(),
       sources: [],
@@ -59,7 +63,8 @@ export class RoomDiscovery {
     let roomMemory = Memory.roomExploration[this.room.name]
     if (this.room.controller) {
       roomMemory.ctrl = {
-        level: this.room.controller.level
+        level: this.room.controller.level,
+        pos: this.room.controller.pos
       }
       if (this.room.controller.owner) {
         roomMemory.ctrl.owner = this.room.controller.owner.username
@@ -69,11 +74,19 @@ export class RoomDiscovery {
       }
     }
 
+    const range = this.getRangeToCity()
+    if (!roomMemory.nearestCity || (roomMemory.nearestCity && !roomMemory.nearestCity.range) || (roomMemory.nearestCity && range && roomMemory.nearestCity.range && roomMemory.nearestCity.range > range)) {
+      roomMemory.nearestCity = {
+        room: this.room.name,
+        range: range
+      }
+    }
+
     Memory.roomExploration[this.room.name] = roomMemory
 
     roomMemory.mine = this.isMine()
-    roomMemory.potentialHarvestingSite = this.isPotentialHarvestingSite()
-    roomMemory.potentialDeployingSite = this.isPotentialDeployingSite()
+    this.updatePotentialHarvestingSite(this.room.name)
+    this.updatePotentialDeployingSite(this.room.name)
 
     Memory.roomExploration[this.room.name] = roomMemory
 
@@ -98,6 +111,7 @@ export class RoomDiscovery {
         (fMod >= 4 && fMod <= 6) &&
         (sMod >= 4 && sMod <= 6);
     }
+    console.log("isSourceKeeperRoom", this.room.name, "world pos", JSON.stringify(pos), "is SK", isSK)
     return isSK
   }
 
@@ -110,19 +124,41 @@ export class RoomDiscovery {
     return isHw
   }
 
-  getRangeToMainRoom(): number {
-    return Game.map.getRoomLinearDistance(this.creep.memory.room, this.room.name)
+  getRangeToCity(): number | undefined {
+    if (this.creep) {
+      const route = Game.map.findRoute(this.creep.memory.room, this.room.name)
+      if (typeof (route) != "number") {
+        return route.length
+      }
+    }
   }
 
-  isPotentialHarvestingSite(): boolean {
+  updatePotentialHarvestingSite(roomName: string): boolean {
     let res = true
-    if (this.memory.highway || this.memory.sourceKeeper) { res = false }
-    if (!this.memory.mine && this.memory.ctrl && (this.memory.ctrl.owner || this.memory.ctrl.reserved)) { res = false }
-    if (this.memory.rangeToMainRoom >= 2) { res = false }
+
+    let roomMemo = Memory.roomExploration[roomName]
+    const isNotPracticable = roomMemo.highway || roomMemo.sourceKeeper
+    const myBase = roomMemo.mine
+    const ownedByOther = roomMemo.ctrl && roomMemo.ctrl.owner && roomMemo.ctrl.owner != u.me()
+    const reservedByOther = roomMemo.ctrl && roomMemo.ctrl.reserved && roomMemo.ctrl.reserved != u.me()
+    const closeToCity = (roomMemo.nearestCity && roomMemo.nearestCity.range && roomMemo.nearestCity.range < 2)
+    if (isNotPracticable || myBase || ownedByOther || reservedByOther || !closeToCity) { res = false }
+    Memory.roomExploration[roomName].potentialHarvestingSite = res
     return res
   }
 
-  isPotentialDeployingSite(): boolean {
+  // // mainRoom.remoteHarvestingCoordinator.roomDiscovery.doMigration()
+  // // update memory state to new model
+  // // can be deleted after first run
+  // doMigration() {
+  //   _.forEach(Memory.roomExploration, function (roomMemo) {
+  //     roomMemo.nearestCity = { room: "W9N16", range: roomMemo.rangeToMainRoom }
+  //     Memory.roomExploration[roomMemo.name] = roomMemo
+  //   })
+  // }
+
+  updatePotentialDeployingSite(roomName: string): boolean {
+    Memory.roomExploration[roomName].potentialDeployingSite = false
     return false
   }
 

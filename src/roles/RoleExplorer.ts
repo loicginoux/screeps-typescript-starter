@@ -15,7 +15,7 @@ export class RoleExplorer {
     if (memory.selectedExit && memory.currentRoomName !== creep.room.name) {
       memory.selectedExit = null;
       memory.currentRoomName = null;
-      console.log(creep.name, "checking room", creep.room.name)
+      // console.log(creep.name, "checking room", creep.room.name)
       new RoomDiscovery(creep.room, creep).checkRoom()
     }
 
@@ -28,7 +28,7 @@ export class RoleExplorer {
       memory.selectedExit = selectedExit;
       memory.currentRoomName = creep.room.name;
       // console.log("Explorer, selected exit:", selectedExit.x, selectedExit.y, selectedExit.roomName);
-      console.log(creep.name, "current room", creep.room.name, "going to", nextRoom.room, JSON.stringify(memory.selectedExit));
+      // console.log(creep.name, "current room", creep.room.name, "going to", nextRoom.room, JSON.stringify(memory.selectedExit));
 
     }
 

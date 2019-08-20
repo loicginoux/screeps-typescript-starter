@@ -5,7 +5,7 @@ export default class ReserverSpawner extends SubSpawner {
     return [
       {
         bodyParts: [CLAIM, MOVE],
-        maxCount: 2,
+        maxCount: 1,
       }
     ]
   }

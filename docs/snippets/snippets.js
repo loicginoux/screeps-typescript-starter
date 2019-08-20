@@ -35,7 +35,7 @@ Game.rooms.E17N41.createConstructionSite(22, 13, STRUCTURE_CONTAINER)
 Game.rooms.E17N41.createConstructionSite(45, 37, STRUCTURE_RAMPART);
 Game.rooms.E17N41.createConstructionSite(47, 37, STRUCTURE_WALL);
 Game.rooms.E17N41.createConstructionSite(44, 37, STRUCTURE_WALL);
-Game.rooms.E17N41.createConstructionSite(18, 17, STRUCTURE_ROAD);
+Game.rooms.W9N16.createConstructionSite(32, 22, STRUCTURE_ROAD);
 Game.rooms.E17N41.createConstructionSite(24, 16, STRUCTURE_EXTENSION);
 Game.rooms.E17N41.createConstructionSite(23, 9, STRUCTURE_LINK);
 Game.rooms.E17N41.createConstructionSite(24, 35, STRUCTURE_LINK);
@@ -48,3 +48,8 @@ JSON.stringify(mainRoom.room.findPath((new RoomPosition(12, 17, mainRoom.room.na
 
 
   (new RoomPosition(10, 10, "E17N40")).room.findExitTo((new RoomPosition(10, 10, "E17N41")).room)
+
+_.forEach(Memory.roomExploration, function (roomMemo) {
+  roomMemo.nearestCity = { room: "W9N16", range: roomMemo.rangeToMainRoom };
+  Memory.roomExploration[roomMemo.name] = roomMemo;
+});

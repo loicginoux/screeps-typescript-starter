@@ -1,9 +1,7 @@
 import { Spawner } from "spawner/Spawner";
-import { Architect } from "Architect";
-import { MiningMinister } from "mining/MiningMinister";
+import { RoomMiningManager } from "mining/RoomMiningManager";
 import { RoomDefenseManager } from "defense/RoomDefenseManager";
 import { TowersManager } from "TowersManager";
-import { EnergyManager } from "EnergyManager";
 import { TickRunner } from "TickRunner";
 import { SpawningRequest } from "spawner/SpawningRequest";
 import { RoleUpgrader } from "roles/RoleUpgrader";
@@ -12,18 +10,17 @@ import { RoleTruck } from "roles/RoleTruck";
 import { RoomPlanner } from "room_planning/RoomPlanner";
 import { u } from 'utils/Utils';
 import { EnergyStructure } from "creep-tasks/utilities/helpers";
-import { RemoteHarvestingManager } from "RemoteHarvestingManager";
+import { RemoteHarvestingCoordinator } from "RemoteHarvestingCoordinator";
 
 
 export class RoomCommander extends TickRunner {
   spawner: Spawner;
-  architect: Architect;
-  miningMinister: MiningMinister;
+
+  roomMiningManager: RoomMiningManager;
   roomDefenseManager: RoomDefenseManager;
   towersManager: TowersManager;
-  energyManager: EnergyManager;
   roomPlanner: RoomPlanner;
-  remoteHarvestingManager: RemoteHarvestingManager;
+  remoteHarvestingCoordinator: RemoteHarvestingCoordinator;
   minUpgraders = 3;
   minBuilders = 2;
   minTrucks = 2;
@@ -34,17 +31,17 @@ export class RoomCommander extends TickRunner {
   memory: RoomMemory;
   availableEnergySources: EnergyStructure[];
   neededEnergySources: EnergyStructure[];
+  links: StructureLink[] = [];
 
   constructor(private room: Room) {
     super()
     this.spawner = new Spawner(this.room)
-    this.architect = new Architect(this.room)
-    this.miningMinister = new MiningMinister(this.room)
+    this.roomMiningManager = new RoomMiningManager(this.room)
     this.towersManager = new TowersManager(this.room)
-    this.energyManager = new EnergyManager(this.room)
     this.roomDefenseManager = new RoomDefenseManager(this.room)
     this.roomPlanner = new RoomPlanner(this.room)
-    this.remoteHarvestingManager = new RemoteHarvestingManager(this.room)
+    this.links = room.find(FIND_STRUCTURES, { filter: (i) => i.structureType == STRUCTURE_LINK }) as StructureLink[]
+    this.remoteHarvestingCoordinator = new RemoteHarvestingCoordinator(this.room)
     global.pubSub.subscribe('ENERGY_AVAILABLE', this.storeAvailabelEnergySources.bind(this))
     global.pubSub.subscribe('ENERGY_NEEDED', this.storeNeededEnergySources.bind(this))
   }
@@ -52,11 +49,10 @@ export class RoomCommander extends TickRunner {
   employees(): any[] {
     return [
       this.spawner,
-      this.miningMinister,
+      this.roomMiningManager,
       this.towersManager,
       this.roomDefenseManager,
-      this.energyManager,
-      this.remoteHarvestingManager
+      this.remoteHarvestingCoordinator
     ];
   }
 
@@ -75,7 +71,7 @@ export class RoomCommander extends TickRunner {
       Memory.rooms[this.room.name] = {
         towersManager: {},
         defenseManager: {},
-        energyManager: {},
+        remoteHarvestingOn: true,
         extensions: 0
       }
     }
@@ -145,6 +141,55 @@ export class RoomCommander extends TickRunner {
       } as SpawningRequest)
     }
 
+    if (this.storageNeeded()) {
+      let firstSpawner = this.room.find(FIND_MY_STRUCTURES, {
+        filter: i => i.structureType === STRUCTURE_SPAWN
+      }) as StructureSpawn[];
+      if (firstSpawner[0]) {
+        global.pubSub.publish('BUILD_STORAGE', {
+          near: firstSpawner[0].pos,
+          room: this.room,
+        })
+      }
+    }
+
+    if (this.linksLevel5Needed()) {
+      // 2 links available
+      global.pubSub.publish('BUILD_LINK', {
+        near: this.room.storage!.pos,
+        room: this.room,
+      })
+      global.pubSub.publish('BUILD_LINK', {
+        near: this.room.controller!.pos,
+        room: this.room,
+      })
+    }
+
+    if (this.linksLevel6Needed()) {
+      const sources = this.room.find(FIND_SOURCES);
+      global.pubSub.publish('BUILD_LINK', {
+        near: sources[0].pos,
+        room: this.room,
+      })
+    }
+
+    if (this.linksLevel7Needed()) {
+      const sources = this.room.find(FIND_SOURCES);
+      if (sources.length >= 2) {
+        global.pubSub.publish('BUILD_LINK', {
+          near: sources[1].pos,
+          room: this.room,
+        })
+      }
+    }
+    if (this.linksLevel8Needed()) {
+      console.log("2 more links available... USE IT")
+    }
+
+    // if (this.links.length < this.optimalLinksNumber()) {
+    //   console.log("links available, place them manually or setup to/from")
+    // }
+
     // if (this.extensionsNeeded() > 0) {
     //   let firstSpawner = this.room.find(FIND_MY_STRUCTURES, {
     //     filter: i => i.structureType === STRUCTURE_SPAWN
@@ -160,6 +205,22 @@ export class RoomCommander extends TickRunner {
     super.preCheck()
     return OK;
   }
+
+  storageNeeded(): boolean { return !!(!this.room.storage && this.room.controller && this.room.controller.level >= 4); }
+
+  linksLevel5Needed(): boolean { return !!(this.room.storage && this.room.controller && this.room.controller.level >= 5 && this.links.length == 0); }
+  linksLevel6Needed(): boolean { return !!(this.room.storage && this.room.controller && this.room.controller.level >= 6 && this.links.length == 2); }
+  linksLevel7Needed(): boolean { return !!(this.room.storage && this.room.controller && this.room.controller.level >= 7 && this.links.length == 3); }
+  linksLevel8Needed(): boolean { return !!(this.room.storage && this.room.controller && this.room.controller.level >= 8 && this.links.length == 4); }
+
+  // optimalLinksNumber(): number {
+  //   let LinksAtLevel = 0
+  //   let links_per_level = [0, 0, 0, 0, 0, 2, 3, 4, 6]
+  //   if (this.room.controller) {
+  //     LinksAtLevel = links_per_level[this.room.controller.level]
+  //   }
+  //   return LinksAtLevel;
+  // }
 
   act() {
     if (this.roomPlanner && this.roomPlanner.memory && this.roomPlanner.memory.plans.roads.length == 0) {
@@ -188,18 +249,32 @@ export class RoomCommander extends TickRunner {
       creep.run()
     })
 
+    this.doLinkTransfer();
+
     super.act()
   }
 
-  finalize() {
-    u.displayVisualRoles(this.room);
-    super.finalize()
+  // finalize() {
+  //   // u.displayVisualRoles(this.room);
+  //   super.finalize()
+  // }
+
+  storeAvailabelEnergySources(...args: any[]) {
+    this.availableEnergySources = _.filter(args[0].structures, (s) => s.room.name == this.room.name);
   }
 
-  storeAvailabelEnergySources(...args: any[]) { this.availableEnergySources = args[0].structures; }
-  storeNeededEnergySources(...args: any[]) { this.neededEnergySources = args[0].structures; }
+  storeNeededEnergySources(...args: any[]) {
+    this.neededEnergySources = _.filter(args[0].structures, (s) => s.room.name == this.room.name);
+  }
 
-  upgradersNeeded(): number { return this.minUpgraders - this.upgraders.length; }
+  upgradersNeeded(): number {
+    let res = this.minUpgraders - this.upgraders.length
+    // only spawn upgraders when enough energy
+    if (this.room.energyAvailable / this.room.energyCapacityAvailable <= 0.5) {
+      res = 0
+    }
+    return res;
+  }
 
   trucksNeeded(): number { return this.minTrucks - this.trucks.length; }
 
@@ -212,6 +287,39 @@ export class RoomCommander extends TickRunner {
     return this.room.controller && (!this.memory.cityConstructionLevel || this.room.controller.level > this.memory.cityConstructionLevel);
   }
 
+  doLinkTransfer() {
+    // console.log("doLinkTransfer")
+    this.links.forEach(link => {
+      // 3% lost on transfer
+      if (link.energy > 3 && u.linkType(link) == 'from') {
+        // console.log("found link for tranfer", link.pos)
+        let target = this.findRecipientLink(link.energy)
+        if (target) {
+          // console.log("found receiver link for tranfer", link.pos)
+          link.transferEnergy(target)
+        }
+      }
+    });
+  }
+
+  findRecipientLink(amountReceived: number): StructureLink | undefined {
+    return _.find(this.links, link => {
+      // console.log("linkType", link.pos, this.linkType(link))
+      // console.log("link.energy", link.energy, amountReceived, link.energyCapacity)
+      // console.log("test", (link.energy + amountReceived) < link.energyCapacity && this.linkType(link) == 'to')
+      return (link.energy + amountReceived) <= link.energyCapacity && u.linkType(link) == 'to'
+    })
+  }
+
+  getProgress() {
+    const room = this.room.name;
+    Memory.lastProgress = Memory.lastProgress || 0;
+    Memory.lastCheckTime = Memory.lastCheckTime || 0;
+    const perTick = (Game.rooms[room].controller!.progress - Memory.lastProgress) / (Game.time - Memory.lastCheckTime);
+    console.log('Progress:', perTick);
+    Memory.lastCheckTime = Game.time;
+    Memory.lastProgress = Game.rooms[room].controller!.progress;
+  }
   // extensionsNeeded(): number {
   //   if (this.extensionsNeededCount) {
   //     return this.extensionsNeededCount

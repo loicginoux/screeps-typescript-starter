@@ -4,11 +4,11 @@ export default class MiningSiteTruckSpawner extends SubSpawner {
   bodyPartsTemplate(): any[] {
     return [
       {
-        bodyParts: [CARRY],
-        maxCount: 5,
+        bodyParts: [CARRY, MOVE],
+        maxCount: 10,
       },
       {
-        bodyParts: [WORK, MOVE],
+        bodyParts: [WORK],
         maxCount: 1,
       }
     ]

@@ -307,7 +307,7 @@ export class RoomPlanner {
             })
             // planned structures should not be walkable
             _.forEach(this.memory.plans.structures, structure => {
-              costs.set(structure.pos[0], structure.pos[1], 255);
+              costs.set(structure.pos[0], structure.pos[1], 0xff);
             })
 
             return costs;

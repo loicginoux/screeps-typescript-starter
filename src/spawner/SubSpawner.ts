@@ -5,7 +5,7 @@ export class SubSpawner {
   bodyPartsTemplate(): any[] {
     return [{
       bodyParts: [WORK, CARRY, MOVE],
-      maxCount: 3
+      maxCount: 5
     }]
   }
 

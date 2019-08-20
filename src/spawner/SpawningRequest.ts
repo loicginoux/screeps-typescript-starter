@@ -28,7 +28,8 @@ export interface SpawningRequest {
   room: Room,
   memory: {
     room?: string,
-    miningSite?: MiningSite,
+    // miningSite?: MiningSite,
+    miningSourceId?: string
     roomTarget?: string
   }
   priority: number,

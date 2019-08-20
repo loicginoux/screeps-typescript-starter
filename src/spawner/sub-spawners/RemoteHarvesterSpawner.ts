@@ -1,6 +1,6 @@
 import { SubSpawner } from "spawner/SubSpawner";
 // do not forget to add new spawner to the list of spawners in spawner/index.ts
-export default class HarvesterSpawner extends SubSpawner {
+export default class RemoteHarvesterSpawner extends SubSpawner {
   bodyPartsTemplate(): any[] {
     // no need for more or the source will be empty before it get recharged
     return [
@@ -9,7 +9,11 @@ export default class HarvesterSpawner extends SubSpawner {
         maxCount: 5,
       },
       {
-        bodyParts: [CARRY, MOVE],
+        bodyParts: [MOVE],
+        maxCount: 3
+      },
+      {
+        bodyParts: [CARRY],
         maxCount: 1
       }
     ]

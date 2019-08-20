@@ -5,6 +5,7 @@ import 'creep-tasks/prototypes'
 import { Empire } from "Empire";
 import { PubSub } from "utils/PubSub";
 import { u } from "utils/Utils";
+import { RoomDiscovery } from "utils/RoomDiscovery";
 
 Memory.debug = 0
 // When compiling TS to JS and bundling with rollup, the line numbers and file names in error messages change
@@ -23,6 +24,7 @@ export const loop = ErrorMapper.wrapLoop(() => {
   global.empire.run()
 
   global.mainRoom = global.empire.roomCommanders[0];
+
 
   // Automatically delete memory of missing creeps
   for (const name in Memory.creeps) {

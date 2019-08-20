@@ -69,6 +69,9 @@ export class RoleTruck {
       } else {
         creep.task = Tasks.withdraw(availableEnergyStructures[0])
       }
+      // if (creep.withdraw(availableEnergyStructures[0], RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+      //   creep.travelTo(availableEnergyStructures[0]);
+      // }
     } else {
       // else get from source directly
       let sources = creep.room.find(FIND_SOURCES_ACTIVE) as Source[]

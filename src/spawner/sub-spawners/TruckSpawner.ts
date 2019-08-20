@@ -4,11 +4,11 @@ export default class TruckSpawner extends SubSpawner {
   bodyPartsTemplate(): any[] {
     return [
       {
-        bodyParts: [CARRY],
+        bodyParts: [CARRY, MOVE],
         maxCount: 5,
       },
       {
-        bodyParts: [WORK, MOVE],
+        bodyParts: [WORK],
         maxCount: 1,
       }
     ]

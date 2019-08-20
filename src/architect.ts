@@ -1,7 +1,9 @@
 import { u } from "utils/Utils";
+import { RoomPlanner } from "room_planning/RoomPlanner";
+import { stringify } from "querystring";
 
 export class Architect {
-  constructor(private room: Room) {
+  constructor() {
     global.pubSub.subscribe('BUILD_CONTAINER_NEEDED', this.buildContainer.bind(this))
     global.pubSub.subscribe('BUILD_ROAD_NEEDED', this.buildRoad.bind(this))
     global.pubSub.subscribe('TOWER_REQUEST', this.buildTower.bind(this))
@@ -19,9 +21,10 @@ export class Architect {
       position = this.findContainerPositionForSource(miningSite.source)
     }
     let res = -1
+    // console.log("position", JSON.stringify(position))
     if (position) {
-      res = Game.rooms[this.room.name].createConstructionSite(position.x, position.y, STRUCTURE_CONTAINER);
-      u.log(`createConstructionSite container ${res}`)
+      res = Game.rooms[miningSite.source.room.name].createConstructionSite(position.x, position.y, STRUCTURE_CONTAINER);
+      // console.log(`createConstructionSite container ${res}`)
       if (res == OK) {
         miningSite.memory[memoryKey] = position
       }
@@ -37,36 +40,106 @@ export class Architect {
       return closeRoad.pos;
     }
     else {
-      const terrains = this.lookForAround(LOOK_TERRAIN, source.pos)
-      const firstPlain = _.find(terrains, (t) => t.terrain == 'plain')
-      if (firstPlain) {
-        return firstPlain
+      let spot = this.lookForContainerSpotAround(source.pos, 2)
+      console.log("lookForContainerSpotAround", spot)
+      if (spot) {
+        return spot
       }
     }
     return null
   }
 
-  lookForAround(type: LookConstant, pos: RoomPosition) {
-    return this.room.lookForAtArea(type, pos.y - 1, pos.x - 1, pos.y + 1, pos.x + 1, true)
+  lookForContainerSpotAround(pos: RoomPosition, range = 1): RoomPosition | undefined {
+
+    const looks = Game.rooms[pos.roomName].lookAtArea(pos.y - range, pos.x - range, pos.y + range, pos.x + range)
+    let spots: RoomPosition[] = [];
+    for (const y in looks) {
+      if (looks.hasOwnProperty(y)) {
+        const xs = looks[y];
+        for (const x in xs) {
+          // console.log("x", x)
+          if (xs.hasOwnProperty(x)) {
+            const lookObjects = xs[x];
+            // console.log("lookObjects", lookObjects)
+            let available = true
+            _.forEach(lookObjects, (lookObject) => {
+              if ((lookObject.type == LOOK_TERRAIN && lookObject.terrain == "wall") || lookObject.type == LOOK_STRUCTURES || lookObject.type == LOOK_CONSTRUCTION_SITES) {
+                available = false
+                return false;
+              }
+            })
+            if (available) {
+              spots.push(new RoomPosition(parseInt(x), parseInt(y), pos.roomName))
+            }
+          }
+        }
+      }
+    }
+    spots = _.sortBy(spots, s => {
+      return s.findInRange(FIND_CONSTRUCTION_SITES, 1).length * -1
+    })
+    console.log("spots", spots)
+    return spots[0]
   }
+
 
   buildRoad(...args: any[]): number {
     const from = args[0].from as RoomPosition
     const to = args[0].to as RoomPosition
 
-    if (from.roomName != to.roomName && from.roomName == this.room.name) { return -1 }
-    const pathSteps = this.room.findPath(from, to, {
-      ignoreCreeps: true,
-      maxRooms: 1
-    })
-    // remove last step to not build road on arrival
-    pathSteps.pop();
+    // if (from.roomName != to.roomName && from.roomName == this.room.name) { return -1 }
+    // const pathSteps = this.room.findPath(from, to, {
+    //   ignoreCreeps: true,
+    //   maxRooms: 3
+    // })
+    // // remove last step to not build road on arrival
+    // pathSteps.pop();
 
     // let points = pathSteps.map(ps => new RoomPosition(ps.x, ps.y, "W11N11"))
     // new RoomVisual('W11N11').poly(points);
 
-    _.forEach(pathSteps, (step) => {
-      this.room.createConstructionSite(step.x, step.y, STRUCTURE_ROAD)
+    let pathSteps = PathFinder.search(from, to, {
+      plainCost: 2,
+      swampCost: 10,
+      roomCallback: (roomName) => {
+        let room = Game.rooms[roomName];
+        // In this example `room` will always exist, but since
+        // PathFinder supports searches which span multiple rooms
+        // you should be careful!
+        if (!room) return false;
+        let costs = new PathFinder.CostMatrix;
+
+        room.find(FIND_STRUCTURES).forEach((struct) => {
+          if (struct.structureType === STRUCTURE_ROAD) {
+            // Favor roads over plain tiles
+            costs.set(struct.pos.x, struct.pos.y, 1);
+          } else if (struct.structureType !== STRUCTURE_CONTAINER &&
+            (struct.structureType !== STRUCTURE_RAMPART ||
+              !struct.my)) {
+            // Can't walk through non-walkable buildings
+            costs.set(struct.pos.x, struct.pos.y, 0xff);
+          }
+        });
+
+        if (Memory.rooms[room.name] && Memory.rooms[room.name].roomPlanner) {
+          let roomPlannerMemo = Memory.rooms[room.name].roomPlanner
+          // planned roads shoulld be prioritized
+          _.forEach(roomPlannerMemo.plans.roads, structure => {
+            costs.set(structure.pos[0], structure.pos[1], 1);
+          })
+          // planned structures should not be walkable
+          _.forEach(roomPlannerMemo.plans.structures, structure => {
+            costs.set(structure.pos[0], structure.pos[1], 0xff);
+          })
+        }
+
+        return costs;
+      }
+    });
+
+
+    _.forEach(pathSteps.path, (step) => {
+      Game.rooms[step.roomName].createConstructionSite(step.x, step.y, STRUCTURE_ROAD)
     })
     return OK
   }

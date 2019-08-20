@@ -11,11 +11,20 @@ class Utils {
     }
   }
 
-  static displayVisualRoles(room: Room) {
+  static me(): string | undefined {
+    let creep: Creep | undefined = _.find(Game.creeps)
+    if (creep) {
+      return creep.owner.username
+    }
+  }
+
+  static displayVisualRoles() {
     const roles: any = {
       "truck": '🚚',
       "miningSiteTruck": '🚛',
+      "remoteMiningSiteTruck": '🚎',
       "harvester": '🔨',
+      "remoteHarvester": '💣',
       "builder": '🚜',
       "explorer": '👁️',
       "upgrader": '🚀',
@@ -27,8 +36,8 @@ class Utils {
     _.forEach(Game.creeps, creep => {
       const role = creep.name.split('_')[0]
       const icon = roles[role] || ''
-      if (icon && creep.pos.roomName == room.name) {
-        room.visual.text(icon, creep.pos.x, creep.pos.y + 0.1, { font: 0.4 })
+      if (icon) {
+        Game.rooms[creep.pos.roomName].visual.text(icon, creep.pos.x, creep.pos.y + 0.1, { font: 0.4 })
       }
 
     });
@@ -71,13 +80,15 @@ class Utils {
 
   // when creep is moving it checks for energy, if he does not found, he run the callback function
   // used when creep is empty and move to get energy
+  // only get energy when the amount is worth it (>80% of creep carry capacity)
   static whileCheckForDroppedEnergy(creep: Creep, callback: () => any) {
-    var energy = creep.pos.findInRange(FIND_DROPPED_RESOURCES, 5);
+    var energyDroppedPoints = creep.pos.findInRange(FIND_DROPPED_RESOURCES, 5);
+    energyDroppedPoints = _.sortBy(energyDroppedPoints, a => -1 * a.amount)
     let found = false
-    if (energy.length && creep.carry.energy == 0) {
-      // console.log(creep.name, 'found energy at ', energy[0].pos);
-      if (creep.pickup(energy[0]) == ERR_NOT_IN_RANGE) {
-        creep.task = Tasks.goTo(energy[0])
+    if (energyDroppedPoints.length && creep.carry.energy == 0 && energyDroppedPoints[0].amount >= creep.carryCapacity * 0.8) {
+      console.log(creep.name, 'found', energyDroppedPoints[0].amount, 'energy at', energyDroppedPoints[0].pos);
+      if (creep.pickup(energyDroppedPoints[0]) == ERR_NOT_IN_RANGE) {
+        creep.task = Tasks.goTo(energyDroppedPoints[0])
       };
       found = true
     }
@@ -128,6 +139,14 @@ class Utils {
       })
     }
     return targets[0]
+  }
+
+  static linkType(link: StructureLink) {
+    let res = null;
+    if (Memory.energyManager.links) {
+      res = _.result(_.find(Memory.energyManager.links, { 'id': link.id }), 'type');
+    }
+    return res
   }
 
 }
