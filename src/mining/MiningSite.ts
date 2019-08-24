@@ -6,6 +6,7 @@ import { RoleMiningSiteBuilder } from "roles/RoleMiningSiteBuilder";
 import { SpawningRequest } from "spawner/SpawningRequest";
 import { EnergyStructure } from "creep-tasks/utilities/helpers";
 import { u } from 'utils/Utils';
+import { profiler } from "utils/profiler";
 
 export class MiningSite extends TickRunner {
 
@@ -29,6 +30,7 @@ export class MiningSite extends TickRunner {
   }
 
   storeAvailabelEnergySources(...args: any[]) {
+    console.log("test1", this.source.id)
     this.availableEnergySources = _.filter(args[0].structures, (s) => s.room.name == this.source.room.name);
   }
 
@@ -37,11 +39,13 @@ export class MiningSite extends TickRunner {
   }
 
   loadData() {
+    // console.log("loadData mining site", this.source.id)
     this.initMemory()
     if (this.memory) {
       this.loadCreepsFromMemory()
     }
     this.loadContainers()
+    super.loadData();
   }
 
   initMemory() {
@@ -70,6 +74,7 @@ export class MiningSite extends TickRunner {
   }
 
   preCheck(): number {
+    // console.log("preCheck mining site")
     if (this.avoid()) {
       return -1
     }
@@ -80,7 +85,8 @@ export class MiningSite extends TickRunner {
           miningSourceId: this.source.id,
         },
         room: this.source.room,
-        priority: 10
+        priority: 10,
+        log: false
       } as SpawningRequest)
     }
 
@@ -91,7 +97,8 @@ export class MiningSite extends TickRunner {
           miningSourceId: this.source.id,
         },
         room: this.source.room,
-        priority: 2
+        priority: 2,
+        log: false
       } as SpawningRequest)
       // return OK, no need for trucks driver for harvester to start working
       // this.preCheckResult = ERR_NOT_ENOUGH_RESOURCES
@@ -184,3 +191,5 @@ export class MiningSite extends TickRunner {
     // console.log("this.containers", this.containers.length, this.buildingContainers.length)
   }
 }
+
+profiler.registerClass(MiningSite, "MiningSite");

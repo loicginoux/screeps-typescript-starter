@@ -11,7 +11,8 @@ type SpawnType =
   | "explorer"
   | "long-distance-harvester"
   | "long-distance-truck"
-  | "reserver";
+  | "reserver"
+  | "dismantler";
 // | "reparator"
 // | "fighter"
 // | "pickaboo"
@@ -20,8 +21,7 @@ type SpawnType =
 // | "miner"
 // | "versatile"
 // | "attacker"
-// | "pestcontrol"
-// | "dismantler";
+// | "pestcontrol";
 
 export interface SpawningRequest {
   role: SpawnType,

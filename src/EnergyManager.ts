@@ -1,5 +1,6 @@
 import { TickRunner } from "TickRunner";
 import { u } from "utils/Utils";
+import { profiler } from "utils/profiler";
 
 export class EnergyManager extends TickRunner {
   memory: EnergyManagerMemory;
@@ -15,8 +16,8 @@ export class EnergyManager extends TickRunner {
 
   constructor() {
     super()
-    // global.pubSub.subscribe('ASSIGNED_ENERGY_TARGET', this.assignCreepToEnergyTarget.bind(this))
-    // global.pubSub.subscribe('UNASSIGNED_ENERGY_TARGET', this.unassignCreepToEnergyTarget.bind(this))
+    global.pubSub.subscribe('ASSIGNED_ENERGY_TARGET', this.assignCreepToEnergyTarget.bind(this))
+    global.pubSub.subscribe('UNASSIGNED_ENERGY_TARGET', this.unassignCreepToEnergyTarget.bind(this))
   }
 
   loadData() {
@@ -125,64 +126,99 @@ export class EnergyManager extends TickRunner {
   assignCreepToEnergyTarget(...args: any[]) {
     const creep = args[0].creep;
     const target = args[0].target;
-    if (!this.memory.assignation[target.id]) { this.memory.assignation[target.id] = [] }
-    if (this.memory.assignation[target.id].indexOf(creep.id) == -1) {
-      this.memory.assignation[target.id].push(creep.id)
-    }
+    console.log("assign energy", creep.name, JSON.stringify(target.pos))
+    creep.memory.energyTarget = target.id
+    // if (!this.memory.assignation[target.id]) { this.memory.assignation[target.id] = [] }
+    // if (this.memory.assignation[target.id].indexOf(creep.id) == -1) {
+    //   this.memory.assignation[target.id].push(creep.id)
+    // }
   }
 
-  // unassignCreepToEnergyTarget(...args: any[]) {
-  //   const creep = args[0].creep;
-  //   const target = args[0].target;
-  //   if (!this.memory.assignation[target.id]) { this.memory.assignation[target.id] = [] }
-  //   // remove current Creep
-  //   this.memory.assignation[target.id] = _.filter(this.memory.assignation[target.id], (id) => {
-  //     return id != creep.id
-  //   });
-  //   // clean other creeps
-  //   this.memory.assignation[target.id] = _.filter(this.memory.assignation[target.id], (id) => {
-  //     const creep: Creep | null = Game.getObjectById(id)
-  //     if (creep) {
-  //       if (creep.memory.task) {
-  //         return creep.memory.task.name == "goTo" && creep.memory.task._target._pos == target.pos
-  //       } else {
-  //         return false
-  //       }
-  //     } else {
-  //       return false
-  //     }
-  //   });
+  unassignCreepToEnergyTarget(...args: any[]) {
+    const creep = args[0].creep;
+    const target = args[0].target;
+    console.log("unassign energy", creep.name, JSON.stringify(target.pos))
+    creep.memory.energyTarget = null
+    // if (!this.memory.assignation[target.id]) { this.memory.assignation[target.id] = [] }
+    // // remove current Creep
+    // this.memory.assignation[target.id] = _.filter(this.memory.assignation[target.id], (id) => {
+    //   return id != creep.id
+    // });
+    // clean other creeps
+    // this.memory.assignation[target.id] = _.filter(this.memory.assignation[target.id], (id) => {
+    //   const creep: Creep | null = Game.getObjectById(id)
+    //   if (!creep) {
+    //     //   if (creep.memory.task) {
+    //     //     return creep.memory.task.name == "goTo" && creep.memory.task._target._pos == target.pos
+    //     //   } else {
+    //     //     return false
+    //     //   }
+    //     // } else {
+    //     return false
+    //   }
+    // });
 
-  //   console.log("unassignCreepToEnergyTarget", target.id, creep.id, this.memory.assignation[target.id])
-  // }
+    console.log("unassignCreepToEnergyTarget", target.id, creep.id, this.memory.assignation[target.id])
+  }
 
-  // static getCreepsAssignedToEnergyTarget(s: Structure): Creep[] {
-  //   let creeps: Creep[] = [];
-  //   if (Memory.energyManager && Memory.energyManager.assignation && Memory.energyManager.assignation[s.id]) {
-  //     Game.rooms[s.pos.roomName].visual.text(JSON.stringify(Memory.energyManager.assignation[s.id]), s.pos.x + 1, s.pos.y)
-  //     creeps = _.map(Memory.energyManager.assignation[s.id], (id) => Game.getObjectById(id) as Creep)
-  //   }
-  //   return creeps;
-  // }
+  static getCreepsAssignedToEnergyTarget(s: Structure): Creep[] {
+    let creeps: Creep[] = [];
+    _.forEach(Game.creeps, (creep) => {
+      if (creep.memory.energyTarget == s.id) {
+        creeps.push(creep)
+      }
+    })
+    // if (this.assignation[s.id]) {
+    //   creeps = this.assignation[s.id]
+    // } else {
+    //   this.assignation[s.id] = creeps
+    // }
 
-  // cleanAssignation(id?: string) {
-  //   if (id) {
-  //     Memory.energyManager.assignation[id] = []
-  //   } else {
-  //     Memory.energyManager.assignation = {}
 
-  //   }
-  // }
+    // if (Memory.energyManager && Memory.energyManager.assignation && Memory.energyManager.assignation[s.id]) {
+    //   Game.rooms[s.pos.roomName].visual.text(JSON.stringify(Memory.energyManager.assignation[s.id]), s.pos.x + 1, s.pos.y)
+    //   creeps = _.map(Memory.energyManager.assignation[s.id], (id) => Game.getObjectById(id) as Creep)
+    // }
+    return creeps;
+  }
 
-  // showAssignations() {
-  //   _.forEach(Game.rooms, (room) => {
-  //     _.forEach(room.find(FIND_STRUCTURES).filter(i => i.structureType == STRUCTURE_CONTAINER), (cont) => {
-  //       if (Memory.energyManager && Memory.energyManager.assignation && Memory.energyManager.assignation[cont.id]) {
-  //         room.visual.text(JSON.stringify(Memory.energyManager.assignation[cont.id]), cont.pos.x + 1, cont.pos.y)
-  //       }
-  //     })
-  //   })
-  // }
+  cleanAssignation(id?: string) {
+    _.forEach(Game.creeps, (creep) => {
+      if (!id || (id && creep.memory.energyTarget == id)) {
+        creep.memory.energyTarget = null
+      }
+    })
+  }
+
+  showAssignations() {
+    const assign: {
+      [object: string]: string[]
+    } = {}
+    _.forEach(Game.creeps, (creep) => {
+      if (creep.memory.energyTarget) {
+        if (assign[creep.memory.energyTarget]) {
+          assign[creep.memory.energyTarget].push(creep.name)
+        } else {
+          assign[creep.memory.energyTarget] = [creep.name]
+        }
+
+      }
+    })
+    // _.forEach(Game.rooms, (room) => {
+
+    //   _.forEach(room.find(FIND_STRUCTURES).filter(i => i.structureType == STRUCTURE_CONTAINER), (cont) => {
+    //     if (Memory.energyManager && Memory.energyManager.assignation && Memory.energyManager.assignation[cont.id]) {
+    //       _.forEach(Memory.energyManager.assignation[cont.id], (creepId, idx) => {
+    //         let creep: Creep | null = Game.getObjectById(creepId)
+    //         if (creep) {
+    //           room.visual.text(creep.name, cont.pos.x, cont.pos.y + idx + 1)
+    //         }
+    //       })
+
+    //     }
+    //   })
+    // })
+  }
   // preCheck(): number {
 
   //   return OK;
@@ -190,10 +226,11 @@ export class EnergyManager extends TickRunner {
 
 
 
-  // act() {
-
-  // }
-
-
+  finalize() {
+    this.showAssignations()
+    super.finalize();
+  }
 
 }
+
+profiler.registerClass(EnergyManager, "EnergyManager");

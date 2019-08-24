@@ -64,6 +64,7 @@ interface Memory {
   }
   mainRooms: string[]
   energyManager: EnergyManagerMemory
+  profiler: any
 }
 
 
@@ -136,6 +137,7 @@ declare namespace NodeJS {
     pubSub?: any,
     mainRoom?: any
     memorySize: number
+    profiler: any
   }
 }
 

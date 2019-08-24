@@ -50,9 +50,9 @@ export class RoomCommander extends TickRunner {
     return [
       this.spawner,
       this.roomMiningManager,
+      this.remoteHarvestingCoordinator,
       this.towersManager,
       this.roomDefenseManager,
-      this.remoteHarvestingCoordinator
     ];
   }
 
@@ -109,7 +109,8 @@ export class RoomCommander extends TickRunner {
           room: this.room.name
         },
         priority: (this.room.controller ? this.room.controller.level : 1),
-        room: this.room
+        room: this.room,
+        log: false
       } as SpawningRequest)
     }
 
@@ -119,7 +120,9 @@ export class RoomCommander extends TickRunner {
         memory: {
           room: this.room.name
         },
-        priority: 2
+        priority: 2,
+        room: this.room,
+        log: false
       } as SpawningRequest)
       // return OK, no need for trucks driver for harvester to start working
       // this.preCheckResult = ERR_NOT_ENOUGH_RESOURCES
@@ -137,7 +140,8 @@ export class RoomCommander extends TickRunner {
           room: this.room.name
         },
         priority: 1,
-        room: this.room
+        room: this.room,
+        log: false
       } as SpawningRequest)
     }
 
@@ -165,23 +169,23 @@ export class RoomCommander extends TickRunner {
       })
     }
 
-    if (this.linksLevel6Needed()) {
-      const sources = this.room.find(FIND_SOURCES);
-      global.pubSub.publish('BUILD_LINK', {
-        near: sources[0].pos,
-        room: this.room,
-      })
-    }
+    // if (this.linksLevel6Needed()) {
+    //   const sources = this.room.find(FIND_SOURCES);
+    //   global.pubSub.publish('BUILD_LINK', {
+    //     near: sources[0].pos,
+    //     room: this.room,
+    //   })
+    // }
 
-    if (this.linksLevel7Needed()) {
-      const sources = this.room.find(FIND_SOURCES);
-      if (sources.length >= 2) {
-        global.pubSub.publish('BUILD_LINK', {
-          near: sources[1].pos,
-          room: this.room,
-        })
-      }
-    }
+    // if (this.linksLevel7Needed()) {
+    //   const sources = this.room.find(FIND_SOURCES);
+    //   if (sources.length >= 2) {
+    //     global.pubSub.publish('BUILD_LINK', {
+    //       near: sources[1].pos,
+    //       room: this.room,
+    //     })
+    //   }
+    // }
     if (this.linksLevel8Needed()) {
       console.log("2 more links available... USE IT")
     }
@@ -272,6 +276,8 @@ export class RoomCommander extends TickRunner {
     // only spawn upgraders when enough energy
     if (this.room.energyAvailable / this.room.energyCapacityAvailable <= 0.5) {
       res = 0
+    } else if (this.room.storage && this.room.storage.store.energy < 1000) {
+      let res = 1 - this.upgraders.length
     }
     return res;
   }

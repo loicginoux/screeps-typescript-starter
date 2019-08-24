@@ -10,7 +10,7 @@ export class RoleMiningSiteBuilder {
         creep.task = Tasks.harvest(source)
       }
     } else {
-      // u.log("findClosestEnergyStructure")
+      // console.log("findClosestEnergyStructure")
       let buildingContainers = source.pos.findInRange(FIND_CONSTRUCTION_SITES, 3, {
         filter: i => i.structureType === STRUCTURE_CONTAINER
       })

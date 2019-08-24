@@ -58,7 +58,8 @@ export class RemoteHarvestingCoordinator extends TickRunner {
           room: this.room.name
         },
         priority: 1,
-        room: this.room
+        room: this.room,
+        log: false
       } as SpawningRequest)
     }
 
@@ -70,7 +71,8 @@ export class RemoteHarvestingCoordinator extends TickRunner {
           roomTarget: this.remoteHarvestingRoomWithoutReserver()[0]
         },
         priority: 1,
-        room: this.room
+        room: this.room,
+        log: false
       } as SpawningRequest)
     }
 

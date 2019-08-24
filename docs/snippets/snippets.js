@@ -50,6 +50,6 @@ JSON.stringify(mainRoom.room.findPath((new RoomPosition(12, 17, mainRoom.room.na
   (new RoomPosition(10, 10, "E17N40")).room.findExitTo((new RoomPosition(10, 10, "E17N41")).room)
 
 _.forEach(Memory.roomExploration, function (roomMemo) {
-  roomMemo.nearestCity = { room: "W9N16", range: roomMemo.rangeToMainRoom };
+  roomMemo.nearestCity = { room: "E1N35", range: Game.map.findRoute(roomMemo.name, 'E1N35').length };
   Memory.roomExploration[roomMemo.name] = roomMemo;
 });

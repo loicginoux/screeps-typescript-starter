@@ -31,9 +31,9 @@ export class Empire extends TickRunner {
   }
 
   employees(): TickRunner[] {
-    let employees: TickRunner[] = this.roomCommanders
-    employees.push(this.energyManager)
-    return employees;
+    let a: TickRunner[] = this.roomCommanders
+    let b: TickRunner[] = [this.energyManager]
+    return a.concat(b);
   }
 
   // build memory data from creeps roles (including newly spawned)
@@ -50,14 +50,11 @@ export class Empire extends TickRunner {
         this.roomCommanders.push(new RoomCommander(room))
       }
     });
-    // this.energyManager.showAssignations()
     // do not forget
     super.loadData();
   }
 
   preCheck() {
-
-
     super.preCheck()
     return OK;
   }

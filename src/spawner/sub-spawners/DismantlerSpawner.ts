@@ -1,8 +1,9 @@
 import { SubSpawner } from "spawner/SubSpawner";
 // do not forget to add new spawner to the list of spawners in spawner/index.ts
-export default class RemoteMiningSiteTruckSpawner extends SubSpawner {
+export default class DismantlerSpawner extends SubSpawner {
+
   bodyPartsTemplate(): any[] {
-    const remoteTruck = [
+    return [
       {
         bodyParts: [CARRY],
         maxCount: 10,
@@ -16,8 +17,6 @@ export default class RemoteMiningSiteTruckSpawner extends SubSpawner {
         maxCount: 3,
       }
     ]
-
-    return remoteTruck
 
     // const buildingTruck = [
     //   {

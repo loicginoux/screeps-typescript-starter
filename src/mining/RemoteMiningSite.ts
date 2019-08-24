@@ -26,11 +26,12 @@ export class RemoteMiningSite extends MiningSite {
         }
       }
     }
-    return super.preCheck();
+    super.preCheck()
+    return OK;
   }
 
   roadsNeeded(): boolean {
-    return !!this.source.room.controller && !this.memory.roads
+    return !!this.source.room.controller && (!this.memory.roads || u.every(1000))
   }
 
   truckAction(creep: Creep) {
@@ -50,6 +51,7 @@ export class RemoteMiningSite extends MiningSite {
   // only get energy from remote rooms (not in bases)
   storeAvailabelEnergySources(...args: any[]) {
     this.availableEnergySources = _.filter(args[0].structures, (s) => _.indexOf(Memory.mainRooms, s.room.name) == -1)
+    // this.availableEnergySources = _.filter(args[0].structures, (s) => _.includes(this.containers.map(i => i.id), s.id))
   }
 
   // only transfer energy to base rooms

@@ -2,15 +2,18 @@ import { Tasks } from 'creep-tasks/Tasks'
 import { EnergyStructure } from 'creep-tasks/utilities/helpers';
 import { RoleMiningSiteTruck } from "roles/RoleMiningSiteTruck";
 import { u } from "utils/Utils";
+import { EnergyManager } from "EnergyManager";
 
 
 export class RoleRemoteMiningSiteTruck extends RoleMiningSiteTruck {
   public static newTask(creep: Creep, availableEnergyStructures: EnergyStructure[], neededEnergyStructures: EnergyStructure[]): void {
     // creep has no evergy, go to container 1 get some
+    console.log(creep.name, "new task")
+    creep.memory.energyTarget = null;
     if (creep.carry.energy == 0) {
-      u.whileCheckForDroppedEnergy(creep, () => {
-        this.getEnergy(creep, availableEnergyStructures);
-      })
+      // u.whileCheckForDroppedEnergy(creep, () => {
+      this.getEnergy(creep, availableEnergyStructures);
+      // })
     } else {
       // console.log(creep.name, " try building")
       let constructionSite = u.tryBuilding(creep);
@@ -37,11 +40,13 @@ export class RoleRemoteMiningSiteTruck extends RoleMiningSiteTruck {
     //   const totalEnergyWillBeWithdraw = _.reduce(creepsAssigned, (total, c: Creep) => {
     //     return (c) ? (total + c.carryCapacity) : total;
     //   }, 0);
+    //   console.log("totalEnergyWillBeWithdraw", totalEnergyWillBeWithdraw, creep.carryCapacity, JSON.stringify(i.pos), i.store.energy)
     //   return totalEnergyWillBeWithdraw + creep.carryCapacity <= i.store.energy
     // })
     // if (creep.name == "miningSiteTruck_1036414") {
     //   console.log(creep.name, "availableEnergyStructures", JSON.stringify(availableEnergyStructures))
     // }
+    console.log(creep.name, "availableEnergyStructures", availableEnergyStructures.length)
     availableEnergyStructures = availableEnergyStructures.sort((a: any, b: any) => {
       let res = u.compareValues(priorities.indexOf(a.structureType), priorities.indexOf(b.structureType))
       if (res === 0) {
@@ -54,11 +59,7 @@ export class RoleRemoteMiningSiteTruck extends RoleMiningSiteTruck {
           bFullEnough = 0
         }
         res = u.compareValues(aFullEnough, bFullEnough)
-        // if (creep.name == "miningSiteTruck_487040") {
-        //   console.log("a.store", JSON.stringify(a.store), a.id, aFullEnough)
-        //   console.log("b.store", JSON.stringify(b.store), b.id, bFullEnough)
-        //   console.log("res", res, creep.carryCapacity)
-        // }
+
         if (res === 0) {
           res = u.compareValues(creep.pos.getRangeTo(a), creep.pos.getRangeTo(b))
         }
@@ -76,14 +77,19 @@ export class RoleRemoteMiningSiteTruck extends RoleMiningSiteTruck {
         // if (creep.name == "miningSiteTruck_1036414") {
         //   console.log(creep.name, "traveling to", availableEnergyStructures[0].structureType, availableEnergyStructures[0].pos)
         // }
-        // creep.task = Tasks.goTo(availableEnergyStructures[0])
-        // global.pubSub.publish('ASSIGNED_ENERGY_TARGET', { creep: creep, target: availableEnergyStructures[0] })
-        creep.travelTo(availableEnergyStructures[0])
+        creep.task = Tasks.goTo(availableEnergyStructures[0])
+        // creep.task = Tasks.chain([
+        //   Tasks.goTo(availableEnergyStructures[0]),
+        //   Tasks.withdraw(availableEnergyStructures[0])
+        // ])
+
+        global.pubSub.publish('ASSIGNED_ENERGY_TARGET', { creep: creep, target: availableEnergyStructures[0], log: false })
+        // creep.travelTo(availableEnergyStructures[0])
       } else {
         // if (creep.name == "miningSiteTruck_1036414") {
         //   console.log(creep.name, "withdrawing from", availableEnergyStructures[0].structureType, availableEnergyStructures[0].pos)
         // }
-        // global.pubSub.publish('UNASSIGNED_ENERGY_TARGET', { creep: creep, target: availableEnergyStructures[0] })
+        global.pubSub.publish('UNASSIGNED_ENERGY_TARGET', { creep: creep, target: availableEnergyStructures[0], log: false })
         creep.task = Tasks.withdraw(availableEnergyStructures[0])
       }
     }

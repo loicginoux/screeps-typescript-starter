@@ -14,11 +14,11 @@ export class RoleUpgrader {
       if (controller) {
         // if (!controller.sign || (controller.sign.username != creep.owner.username)) {
         if (creep.signController(controller, "🧘 feels good being at home 🧘") == ERR_NOT_IN_RANGE) {
-          creep.travelTo(controller);
+          creep.moveTo(controller);
         }
         // }
         if (creep.upgradeController(controller) === ERR_NOT_IN_RANGE) {
-          creep.travelTo(controller);
+          creep.moveTo(controller);
         }
       }
     }

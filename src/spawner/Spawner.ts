@@ -38,9 +38,12 @@ export class Spawner extends TickRunner {
     // sort by desc priority
     this.spawningRequests = _.sortBy(this.spawningRequests, req => -1 * req.priority)
     // only process 1 request per spawner in room
+    if (this.spawningRequests.length > 0) {
+      console.log("spawningRequests:", this.spawningRequests.map(i => `${i.role} (${JSON.stringify(i.memory)})`))
+    }
     let processableRequests = _.take(this.spawningRequests, this.availableSpawner!.length)
-    // u.log('Spawner act', processableRequests)
-    // u.log("this.availableSpawner", this.availableSpawner)
+    // console.log('Spawner act', processableRequests)
+    // console.log("this.availableSpawner", this.availableSpawner)
     _.forEach(processableRequests, req => {
       req.spawner = this.availableSpawner!.pop();
       this.spawn(req)
@@ -65,7 +68,7 @@ export class Spawner extends TickRunner {
   }
 
   spawn(spawningRequest: SpawningRequest): Creep {
-    u.log(`trying spawning ${spawningRequest.role}`)
+    console.log(`trying spawning ${spawningRequest.role}`)
     return this.getSpawnerFor(spawningRequest).spawn();
   }
 }

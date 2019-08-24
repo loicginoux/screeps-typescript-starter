@@ -22,7 +22,7 @@ export class RoomDiscovery {
     let roomMemory = {
       name: this.room.name,
       nearestCity: {
-        room: this.room.name,
+        room: this.creep!.memory.room,
         range: this.getRangeToCity()
       },
       sourceKeeper: this.isSourceKeeperRoom(),

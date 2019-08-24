@@ -30,7 +30,8 @@ class Utils {
       "upgrader": '🚀',
       "reserver": '💋',
       "soldier": '🔪',
-      "ranged_attack": '🔫'
+      "ranged_attack": '🔫',
+      "dismantler": '🔧'
     }
     const roleKeys = _.keys(roles)
     _.forEach(Game.creeps, creep => {
